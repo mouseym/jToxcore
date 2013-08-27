@@ -21,6 +21,8 @@
 
 package im.tox.jtoxcore;
 
+import im.tox.jtoxcore.callbacks.OnMessageCallback;
+
 /**
  * This is the main wrapper class for the tox library. It contains wrapper
  * methods for everything in the public API provided by tox.h
@@ -35,6 +37,40 @@ public class JTox {
 	 */
 	private long messengerPointer;
 
+	private OnMessageCallback onMessageCallback;
+
+	/**
+	 * Native call to tox_callback_friendmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 */
+	private native void tox_callback_friendmessage(long messengerPointer);
+
+	/**
+	 * Set the callback to be executed when a message is received
+	 * 
+	 * @param callback
+	 *            the callback instance to be used
+	 */
+	public void setOnMessageCallback(OnMessageCallback callback) {
+		this.onMessageCallback = callback;
+		tox_callback_friendmessage(this.messengerPointer);
+	}
+
+	/**
+	 * This method is a hook used by the JNI code to execute the callback on
+	 * receiving a message
+	 * 
+	 * @param friendNumber
+	 *            the friend's number
+	 * @param message
+	 *            the message
+	 */
+	private void executeOnMessageCallback(int friendNumber, String message) {
+		this.onMessageCallback.execute(friendNumber, message);
+	}
+
 	/**
 	 * Create a new instance of JTox with a given messengerPointer. Due to the
 	 * nature of the native calls, this call is <i>unsafe<i>. Calling it with an
@@ -44,6 +80,7 @@ public class JTox {
 	 * JTox instance around between different activities.
 	 * 
 	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
 	 */
 	public JTox(long messengerPointer) {
 		this.messengerPointer = messengerPointer;
@@ -79,7 +116,7 @@ public class JTox {
 	 * Native call to tox_addfriend
 	 * 
 	 * @param messengerPointer
-	 *            pointer to the internal messenger struct.
+	 *            pointer to the internal messenger struct
 	 * @param address
 	 *            address of the friend
 	 * @param data
