@@ -1,3 +1,12 @@
+# Ignore binaries
+bin/
+
+# .cproject contains specific locations on local filesystem
+.cproject
+
+# Headers are automatically generated with javah, should not be under version control
+*.h
+
 # Object files
 *.o
 
