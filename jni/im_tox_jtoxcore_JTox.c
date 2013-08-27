@@ -23,6 +23,11 @@
 
 #include "im_tox_jtoxcore_JTox.h"
 
+JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
+		jclass clazz) {
+	return ((jlong) tox_new());
+}
+
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
 		jobject obj, jlong messenger, jstring address, jstring data) {
 	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
