@@ -10,3 +10,19 @@ This is for the most recent version of Eclipse (Kepler)
 
 The project assumes make is available. I don't know the include paths that will be automatically set up when freshly importing this,
 so direct any questions on importing this to https://github.com/sonOfRa. Also sonOfRa on IRC in both #tox and #tox-dev.
+
+
+## Importing into Eclipse ##
+1. Clone the repository.
+2. Start Eclipse, and under File -> Import -> General select "Existing Projects into Workspace".
+3. Browse to the location of the git repository, and untick "Copy projects into workspace" (If you copy the project into your workspace, all changes will be made there, and not to the repository)
+4. When done, right click the Project -> New -> Other -> C/C++ -> "Convert to a C/C++ Project (adds C/C++ nature)"
+4.1 Select "Convert to C project"
+4.2 Select "Makefile Project"
+4.3 Select a toolchain. I use Linux GCC, you might have to pick another, depending on your platform and environment
+5. Go to Project -> Properties -> C/C++ General -> Paths and Symbols
+5.1 In the "Includes" tab, add ${JAVA_HOME}/include and ${JAVA_HOME}/(linux|win32|whatever) to all languages.
+6. Hit Shift+F9 to open the "Make"-Menu. Here you add a make target called "JTox.h", which you can now execute after bringing up the Make menu again. This target creates the header files for each designated native method in the Java Code
+
+## General Guidelines ##
+Do not expose native calls publicly, wrap them with Java function as shown in the addFriend example
