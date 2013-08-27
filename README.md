@@ -24,5 +24,10 @@ so direct any questions on importing this to https://github.com/sonOfRa. Also so
 5.1 In the "Includes" tab, add ${JAVA_HOME}/include and ${JAVA_HOME}/(linux|win32|whatever) to all languages.
 5.2 If tox.h is not on your include path, you have to add it manually, just like you added the above include paths. If you did a 'make install' when building tox, the headers should be in /usr/local/include
 6. Hit Shift+F9 to open the "Make"-Menu. Here you add a make target called "JTox.h", which you can now execute after bringing up the Make menu again. This target creates the header files for each designated native method in the Java Code
+
 ## General Guidelines ##
-Do not expose native calls publicly, wrap them with Java function as shown in the addFriend example
+1. Do not expose native calls publicly, wrap them with Java function as shown in the addFriend example
+2. In public facing Java methods, throw Exceptions instead of returning error codes
+3. Group native calls with their corresponding public API method (native method directly above API call)
+4. JavaDoc on public methods is mandatory. Adding JavaDoc to non-public methods is highly encouraged.
+5. Do not commit code that only works on Java 7. This API is supposed to work on Android as well, which does not support the full Java 7 specification.
