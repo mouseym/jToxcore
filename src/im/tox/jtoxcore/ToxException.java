@@ -21,6 +21,13 @@
 
 package im.tox.jtoxcore;
 
+/**
+ * Exception class used in the Tox project.
+ * Carries an Errorcode that signals the error that occurred during the
+ * execution of native code
+ * @author sonOfRa
+ *
+ */
 public class ToxException extends Exception {
 	private static final long serialVersionUID = 1L;
 	

@@ -21,6 +21,12 @@
 
 package im.tox.jtoxcore;
 
+/**
+ * This is the main wrapper class for the tox library. It contains wrapper
+ * methods for everything in the public API provided by tox.h
+ * @author sonOfRa
+ *
+ */
 public class JTox {
 	
 	/**
