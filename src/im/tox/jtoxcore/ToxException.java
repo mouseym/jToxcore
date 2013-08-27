@@ -22,24 +22,37 @@
 package im.tox.jtoxcore;
 
 /**
- * Exception class used in the Tox project.
- * Carries an Errorcode that signals the error that occurred during the
- * execution of native code
+ * Exception class used in the Tox project. Carries an Errorcode that signals
+ * the error that occurred during the execution of native code
+ * 
  * @author sonOfRa
- *
+ * 
  */
 public class ToxException extends Exception {
 	private static final long serialVersionUID = 1L;
-	
+
 	private ToxError error;
-		
+
+	/**
+	 * Create a new ToxException with the given error code
+	 * 
+	 * @param error
+	 *            the error code to create the new Exception with
+	 */
+	public ToxException(ToxError error) {
+		super();
+		this.error = error;
+	}
+
 	/**
 	 * Create a new ToxException with an error code as int
-	 * @param errcode the error code, as an integer
+	 * 
+	 * @param errcode
+	 *            the error code, as an integer
 	 */
 	public ToxException(int errcode) {
 		super();
-		switch(errcode) {
+		switch (errcode) {
 		case -1:
 			this.error = ToxError.TOX_FAERR_TOOLONG;
 			break;
@@ -66,7 +79,7 @@ public class ToxException extends Exception {
 			break;
 		}
 	}
-	
+
 	/**
 	 * @return The error code for this Exception
 	 */
