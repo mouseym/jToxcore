@@ -78,6 +78,8 @@ public class JTox {
 	/**
 	 * Native call to tox_addfriend
 	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct.
 	 * @param address
 	 *            address of the friend
 	 * @param data
@@ -112,7 +114,47 @@ public class JTox {
 	}
 
 	/**
+	 * Native call to tox_addfriend_norequest
 	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param address
+	 *            the address of the client you want to add
+	 */
+	private native int tox_addfriend_norequest(long messengerPointer,
+			String address);
+
+	public int confirmRequest(String address) throws ToxException {
+		int errcode = tox_addfriend_norequest(this.messengerPointer, address);
+
+		if (errcode >= 0) {
+			return errcode;
+		} else {
+			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+		}
+	}
+
+	/**
+	 * Native call to tox_getaddress
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct.
+	 * 
+	 * @return the client's address on success, null on failure
+	 */
+	private native String tox_getaddress(long messengerPointer);
+
+	public String getAddress() throws ToxException {
+		String address = tox_getaddress(this.messengerPointer);
+
+		if (address == null) {
+			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+		} else {
+			return address;
+		}
+	}
+
+	/**
 	 * @return the pointer to the internal messenger struct, as a long
 	 */
 	public long getPointer() {
