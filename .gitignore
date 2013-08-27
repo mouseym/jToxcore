@@ -7,3 +7,20 @@ bin/
 # Headers are automatically generated with javah, should not be under version control
 *.h
 
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
