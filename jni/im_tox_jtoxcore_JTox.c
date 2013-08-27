@@ -23,6 +23,34 @@
 
 #include "im_tox_jtoxcore_JTox.h"
 
+typedef struct {
+	JNIEnv *env;
+	jobject jobj;
+} tox_jni_callback;
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1callback_1friendmessage(
+		JNIEnv * env, jobject obj, jlong messenger) {
+	tox_jni_callback callback = { env, obj };
+	tox_callback_friendmessage(messenger, friendmessage_callback(), callback);
+}
+
+void friendmessage_callback(Tox *tox, int friendnumber, uint8_t *message,
+		uint16_t length, tox_jni_callback *data) {
+	jclass clazz = data->env->GetObjectClass(data->env, data->jobj);
+	jmethodID method = data->env->GetMethodID(data->env, clazz,
+			"executeOnMessageCallback", "(ILjava/lang/String;)V");
+
+	const uint8_t _message = data->env->GetStringUTFChars(data->env, message,
+			0);
+	data->env->CallVoidMethod(data->env, data->jobj, friendnumber, _message);
+	data->env->ReleaseStringUTFChars(data->env, message, _message);
+}
+
+JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
+		jclass clazz) {
+	return ((jlong) tox_new());
+}
+
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
 		jobject obj, jlong messenger, jstring address, jstring data) {
 	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
@@ -34,4 +62,21 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
 	(*env)->ReleaseStringUTFChars(env, data, _data);
 
 	return errcode;
+}
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
+		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
+	const uint8_t _address = (*env)->GetStringUTFChars(env, address, 0);
+
+	int errcode = tox_addfriend_norequest(messenger, _address);
+	(*env)->ReleaseStringUTFChars(env, address, _address);
+
+	return errcode;
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
+		JNIEnv * env, jobject obj, jlong messenger) {
+	uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
+	tox_getaddress(messenger, address);
+	return address;
 }
