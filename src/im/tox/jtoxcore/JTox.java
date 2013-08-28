@@ -31,6 +31,10 @@ import im.tox.jtoxcore.callbacks.OnMessageCallback;
  * 
  */
 public class JTox {
+	
+	static {
+		System.loadLibrary("jtox");
+	}
 
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
@@ -221,6 +225,45 @@ public class JTox {
 		} else {
 			return errcode;
 		}
+	}
+
+	/**
+	 * Native call to tox_getclient_id
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            local number of the friend
+	 * @return the public key of the specified friend
+	 */
+	private native String tox_getclient_id(long messengerPointer,
+			int friendnumber);
+
+	public String getClientId(int friendnumber) throws ToxException {
+		String result = tox_getclient_id(this.messengerPointer, friendnumber);
+
+		if (result == null) {
+			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+		} else {
+			return result;
+		}
+	}
+
+	/**
+	 * Native call to tox_do
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 */
+	private native void tox_do(long messengerPointer);
+
+	/**
+	 * The main tox loop that needs to be run at least 20 times per second. When
+	 * implementing this, either use it in a main loop to guarantee execution,
+	 * or start an asynchronous Thread or Service to do it for you.
+	 */
+	public void doTox() {
+		tox_do(this.messengerPointer);
 	}
 
 	/**
