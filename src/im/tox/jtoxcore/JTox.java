@@ -192,6 +192,38 @@ public class JTox {
 	}
 
 	/**
+	 * Native call to tox_getfriend_id
+	 * 
+	 * @param clientid
+	 *            the friend's public key
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return the local id of the specified friend, or -1 if friend does not
+	 *         exist
+	 */
+	private native int tox_getfriend_id(long messengerPointer, String clientid);
+
+	/**
+	 * Returns the local id of a friend given a public key. Throws an exception
+	 * in case the specified friend does not exist
+	 * 
+	 * @param clientid
+	 *            the friend's public key
+	 * @throws ToxException
+	 *             when the friend does not exist
+	 * @return the local id of the specified friend
+	 */
+	public int getFriendId(String clientid) throws ToxException {
+		int errcode = tox_getfriend_id(this.messengerPointer, clientid);
+
+		if (errcode == -1) {
+			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+		} else {
+			return errcode;
+		}
+	}
+
+	/**
 	 * @return the pointer to the internal messenger struct, as a long
 	 */
 	public long getPointer() {

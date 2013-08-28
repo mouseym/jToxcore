@@ -66,7 +66,7 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
 		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
-	const uint8_t _address = (*env)->GetStringUTFChars(env, address, 0);
+	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
 
 	int errcode = tox_addfriend_norequest(messenger, _address);
 	(*env)->ReleaseStringUTFChars(env, address, _address);
@@ -79,4 +79,14 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
 	uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
 	tox_getaddress(messenger, address);
 	return address;
+}
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1getfriend_1id
+  (JNIEnv * env, jobject obj, jlong messenger, jstring address) {
+	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
+
+	int errcode = tox_getfriend_id(messenger, _address);
+	(*env)->ReleaseStringUTFChars(env, address, _address);
+
+	return errcode;
 }
