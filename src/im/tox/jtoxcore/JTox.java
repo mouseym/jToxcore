@@ -21,6 +21,9 @@
 
 package im.tox.jtoxcore;
 
+import java.net.InetSocketAddress;
+
+import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
 import im.tox.jtoxcore.callbacks.OnMessageCallback;
 
 /**
@@ -31,8 +34,9 @@ import im.tox.jtoxcore.callbacks.OnMessageCallback;
  * 
  */
 public class JTox {
-	
+
 	static {
+		System.loadLibrary("sodium");
 		System.loadLibrary("jtox");
 	}
 
@@ -40,40 +44,6 @@ public class JTox {
 	 * This field contains the pointer used in all native tox_ method calls.
 	 */
 	private long messengerPointer;
-
-	private OnMessageCallback onMessageCallback;
-
-	/**
-	 * Native call to tox_callback_friendmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 */
-	private native void tox_callback_friendmessage(long messengerPointer);
-
-	/**
-	 * Set the callback to be executed when a message is received
-	 * 
-	 * @param callback
-	 *            the callback instance to be used
-	 */
-	public void setOnMessageCallback(OnMessageCallback callback) {
-		this.onMessageCallback = callback;
-		tox_callback_friendmessage(this.messengerPointer);
-	}
-
-	/**
-	 * This method is a hook used by the JNI code to execute the callback on
-	 * receiving a message
-	 * 
-	 * @param friendNumber
-	 *            the friend's number
-	 * @param message
-	 *            the message
-	 */
-	private void executeOnMessageCallback(int friendNumber, String message) {
-		this.onMessageCallback.execute(friendNumber, message);
-	}
 
 	/**
 	 * Create a new instance of JTox with a given messengerPointer. Due to the
@@ -86,7 +56,7 @@ public class JTox {
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
 	 */
-	public JTox(long messengerPointer) {
+	private JTox(long messengerPointer) {
 		this.messengerPointer = messengerPointer;
 	}
 
@@ -264,6 +234,79 @@ public class JTox {
 	 */
 	public void doTox() {
 		tox_do(this.messengerPointer);
+	}
+
+	/**
+	 * Native call to tox_bootstrap
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param ip
+	 *            ip address to bootstrap with
+	 * @param port
+	 *            port to bootstrap with
+	 * @param pubkey
+	 *            public key of the bootstrap node
+	 */
+	private native void tox_bootstrap(long messengerPointer, byte[] ip,
+			int port, String pubkey);
+
+	/**
+	 * Method used to bootstrap the client's connection.
+	 * 
+	 * @param address
+	 *            A IP-port pair to connect to
+	 * @param pubkey
+	 *            public key of the bootstrap node
+	 */
+	public void bootstrap(InetSocketAddress address, String pubkey) {
+		tox_bootstrap(messengerPointer, address.getAddress().getAddress(),
+				address.getPort(), pubkey);
+	}
+
+	/**
+	 * Native call to tox_isconnected
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 */
+	private native int tox_isconnected(long messengerPointer);
+
+	/**
+	 * Check if the client is connected to the DHT
+	 * 
+	 * @return true if connected, false otherwise
+	 */
+	public boolean isConnected() {
+		if (tox_isconnected(messengerPointer) == 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	/**
+	 * Native call to tox_callback_friendrequest
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving friend requests
+	 */
+	private native void tox_onfriendrequest(long messengerPointer,
+			OnFriendRequestCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving friend requests. Any
+	 * time a friend request is received on this Tox instance, the
+	 * {@link OnFriendRequestCallback#execute(String, String)} method will be
+	 * executed.
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving friend requests
+	 */
+	public void setOnFriendRequestCallback(OnFriendRequestCallback callback) {
+		tox_onfriendrequest(this.messengerPointer, callback);
 	}
 
 	/**

@@ -8,10 +8,10 @@ PACKAGE_NAME = im.tox.jtoxcore
 all : libjtox.so
 
 libjtox.so : JTox.o
-	gcc -shared -o $@ $< -ltoxcore
+	gcc -shared -o $@ $< -ltoxcore -lsodium
 
 JTox.o : JTox.c JTox.h
-	LANG="en_US.UTF-8" gcc $(GCC_INCLUDE) -fPIC -c $< -o $@
+	LANG="en_US.UTF-8" gcc $(GCC_INCLUDE) -fPIC -ggdb -c $< -o $@
 
 # Define a virtual path for .class in the bin directory
 vpath %.class $(CLASS_PATH)/im/tox/jtoxcore
@@ -21,4 +21,4 @@ JTox.h : JTox.class
 	javah -classpath $(CLASS_PATH) $(PACKAGE_NAME).$*
 
 clean :
-	rm -f jtox.so JTox.o im_tox_jtoxcore_JTox.h
+	rm -f libjtox.so JTox.o im_tox_jtoxcore_JTox.h

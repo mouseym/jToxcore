@@ -5,7 +5,7 @@ bin/
 .cproject
 
 # Headers are automatically generated with javah, should not be under version control
-*.h
+jni/im_tox_jtoxcore_JTox.h
 
 # Object files
 *.o
