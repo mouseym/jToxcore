@@ -30,6 +30,10 @@
 #define ADDR_SIZE_HEX (TOX_FRIEND_ADDRESS_SIZE * 2 + 1)
 
 /**
+ * Begin Utilities section
+ */
+
+/**
  * Convert a given binary address to a human-readable hexadecimal string
  */
 void addr_to_hex(uint8_t *addr, char *buf) {
@@ -56,85 +60,26 @@ void hex_to_addr(const char *hex, uint8_t *buf) {
 		sscanf(pos, "%2hhx", &buf[i]);
 }
 
+/**
+ * End Utilities section
+ */
+
+/**
+ * Begin maintenance section
+ */
 JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
 		jclass clazz) {
-	return ((jlong) tox_new());
-}
-
-JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
-		jobject obj, jlong messenger, jstring address, jstring data) {
-	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
-	const uint8_t *_data = (*env)->GetStringUTFChars(env, data, 0);
-
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-	uint8_t *__data = malloc(strlen(_data) + 1);
-
-	jsize length = (*env)->GetStringUTFLength(env, data);
-
-	int errcode = tox_addfriend((Tox *) messenger, __address, __data, length);
-
-	free(__data);
-	(*env)->ReleaseStringUTFChars(env, address, _address);
-	(*env)->ReleaseStringUTFChars(env, data, _data);
-
-	return errcode;
-}
-
-JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
-		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
-	const char *_address = (*env)->GetStringUTFChars(env, address, 0);
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-
-	int errcode = tox_addfriend_norequest((Tox *) messenger, __address);
-
-	(*env)->ReleaseStringUTFChars(env, address, _address);
-
-	return errcode;
-}
-
-JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
-		JNIEnv * env, jobject obj, jlong messenger) {
-	uint8_t addr[TOX_FRIEND_ADDRESS_SIZE];
-	tox_getaddress((Tox *) messenger, addr);
-	char id[ADDR_SIZE_HEX] = { 0 };
-	addr_to_hex(addr, id);
-
-	jstring result = (*env)->NewStringUTF(env, id);
-	return result;
-}
-
-JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1getfriend_1id(
-		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
-	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
-
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-
-	int errcode = tox_getfriend_id((Tox *) messenger, __address);
-
-	(*env)->ReleaseStringUTFChars(env, address, _address);
-
-	return errcode;
-}
-
-JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getclient_1id(
-		JNIEnv * env, jobject obj, jlong messenger, jint friendnumber) {
-	uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
-
-	if (tox_getclient_id((Tox *) messenger, friendnumber, address) == -1) {
-		return 0;
-	} else {
-		char _address[ADDR_SIZE_HEX] = { 0 };
-		addr_to_hex(address, _address);
-		jstring result = (*env)->NewStringUTF(env, _address);
-		return result;
-	}
-}
-JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1do(JNIEnv * env,
-		jobject obj, jlong messenger) {
-	tox_do((Tox *) messenger);
+	tox_jni_globals_t *globals = malloc(sizeof(tox_jni_globals_t));
+	globals->tox = tox_new();
+	globals->frqc = 0;
+	globals->frmc = 0;
+	globals->ac = 0;
+	globals->nc = 0;
+	globals->smc = 0;
+	globals->usc = 0;
+	globals->rrc = 0;
+	globals->csc = 0;
+	return ((jlong) globals);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap(JNIEnv * env,
@@ -158,39 +103,268 @@ JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap(JNIEnv * env,
 	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
 	hex_to_addr(_address, __address);
 
-	tox_bootstrap((Tox *) messenger, ipport, __address);
+	tox_bootstrap(((tox_jni_globals_t *) messenger)->tox, ipport, __address);
 
 	(*env)->ReleaseStringUTFChars(env, address, _address);
 }
 
-JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1isconnected(JNIEnv * env,
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1do(JNIEnv * env,
 		jobject obj, jlong messenger) {
-	return tox_isconnected((Tox *) messenger);
+	tox_do(((tox_jni_globals_t *) messenger)->tox);
 }
 
-JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendrequest(
-		JNIEnv * env, jobject obj, jlong messenger,
-		friendrequest_callback callback) {
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1isconnected(JNIEnv * env,
+		jobject obj, jlong messenger) {
+	return tox_isconnected(((tox_jni_globals_t *) messenger)->tox);
+}
 
-	tox_jni_callback *data = malloc(sizeof(tox_jni_callback));
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1kill(JNIEnv * env,
+		jobject jobj, jlong messenger) {
+	tox_jni_globals_t *globals = (tox_jni_globals_t *) messenger;
+
+	if (globals->frqc) {
+		if (globals->frqc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->frqc->jobj);
+		}
+		free(globals->frqc);
+	}
+
+	if (globals->frmc) {
+		if (globals->frmc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->frmc->jobj);
+		}
+		free(globals->frmc);
+	}
+
+	if (globals->ac) {
+		if (globals->ac->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->ac->jobj);
+		}
+		free(globals->ac);
+	}
+
+	if (globals->nc) {
+		if (globals->nc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->nc->jobj);
+		}
+		free(globals->nc);
+	}
+
+	if (globals->smc) {
+		if (globals->smc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->smc->jobj);
+		}
+		free(globals->smc);
+	}
+
+	if (globals->usc) {
+		if (globals->usc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->usc->jobj);
+		}
+		free(globals->usc);
+	}
+
+	if (globals->rrc) {
+		if (globals->rrc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->rrc->jobj);
+		}
+		free(globals->rrc);
+	}
+
+	if (globals->csc) {
+		if (globals->csc->jobj) {
+			(*env)->DeleteGlobalRef(env, globals->csc->jobj);
+		}
+		free(globals->csc);
+	}
+
+	tox_kill(globals->tox);
+
+	free(globals);
+}
+
+/**
+ * End maintenance section
+ */
+
+/**
+ * Begin general section
+ */
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
+		jobject obj, jlong messenger, jstring address, jstring data) {
+	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
+	const uint8_t *_data = (*env)->GetStringUTFChars(env, data, 0);
+
+	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
+	hex_to_addr(_address, __address);
+	uint8_t *__data = malloc(strlen(_data) + 1);
+
+	jsize length = (*env)->GetStringUTFLength(env, data);
+
+	int errcode = tox_addfriend(((tox_jni_globals_t *) messenger)->tox,
+			__address, __data, length);
+
+	free(__data);
+	(*env)->ReleaseStringUTFChars(env, address, _address);
+	(*env)->ReleaseStringUTFChars(env, data, _data);
+
+	return errcode;
+}
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
+		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
+	const char *_address = (*env)->GetStringUTFChars(env, address, 0);
+	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
+	hex_to_addr(_address, __address);
+
+	int errcode = tox_addfriend_norequest(
+			((tox_jni_globals_t *) messenger)->tox, __address);
+
+	(*env)->ReleaseStringUTFChars(env, address, _address);
+
+	return errcode;
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
+		JNIEnv * env, jobject obj, jlong messenger) {
+	uint8_t addr[TOX_FRIEND_ADDRESS_SIZE];
+	tox_getaddress(((tox_jni_globals_t *) messenger)->tox, addr);
+	char id[ADDR_SIZE_HEX] = { 0 };
+	addr_to_hex(addr, id);
+
+	jstring result = (*env)->NewStringUTF(env, id);
+	return result;
+}
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1getfriend_1id(
+		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
+	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
+
+	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
+	hex_to_addr(_address, __address);
+
+	int errcode = tox_getfriend_id(((tox_jni_globals_t *) messenger)->tox,
+			__address);
+
+	(*env)->ReleaseStringUTFChars(env, address, _address);
+
+	return errcode;
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getclient_1id(
+		JNIEnv * env, jobject obj, jlong messenger, jint friendnumber) {
+	uint8_t address[TOX_FRIEND_ADDRESS_SIZE];
+
+	if (tox_getclient_id(((tox_jni_globals_t *) messenger)->tox, friendnumber,
+			address) == -1) {
+		return 0;
+	} else {
+		char _address[ADDR_SIZE_HEX] = { 0 };
+		addr_to_hex(address, _address);
+		jstring result = (*env)->NewStringUTF(env, _address);
+		return result;
+	}
+}
+
+/**
+ * End general section
+ */
+
+/**
+ * Begin Callback Section
+ */
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendrequest(
+		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+
+	friendrequest_callback_t *data = malloc(sizeof(friendrequest_callback_t));
 	data->env = env;
 	data->jobj = (*env)->NewGlobalRef(env, callback);
 	(*env)->DeleteLocalRef(env, callback);
-	tox_callback_friendrequest((Tox *) messenger,
+	((tox_jni_globals_t *) messenger)->frqc = data;
+	tox_callback_friendrequest(((tox_jni_globals_t *) messenger)->tox,
 			(void *) callback_friendrequest, data);
 }
 
 static void callback_friendrequest(uint8_t *pubkey, uint8_t *message,
 		uint16_t length, void *ptr) {
-	tox_jni_callback *data = ptr;
-	const jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
-	const jmethodID meth = (*data->env)->GetMethodID(data->env, class,
-			"execute", "(Ljava/lang/String;Ljava/lang/String;)V");
-	char buf[ADDR_SIZE_HEX] = {0};
+	friendrequest_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(Ljava/lang/String;Ljava/lang/String;)V");
+	char buf[ADDR_SIZE_HEX] = { 0 };
 	addr_to_hex(pubkey, buf);
 	jstring _pubkey = (*data->env)->NewStringUTF(data->env, buf);
 	jstring _message = (*data->env)->NewStringUTF(data->env, message);
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, _pubkey,
 			_message);
+}
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendmessage(
+		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	friendmessage_callback_t *data = malloc(sizeof(friendmessage_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	((tox_jni_globals_t *) messenger)->frmc = data;
+	tox_callback_friendmessage(((tox_jni_globals_t *) messenger)->tox,
+			(void *) callback_friendmessage, data);
+
+}
+
+static void callback_friendmessage(Tox * tox, int friendnumber,
+		uint8_t *message, uint16_t length, void *ptr) {
+	friendmessage_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(ILjava/lang/String;)V");
+	jstring _message = (*data->env)->NewStringUTF(data->env, message);
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			_message);
+}
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onaction(JNIEnv * env,
+		jobject obj, jlong messenger, jobject callback) {
+	action_callback_t *data = malloc(sizeof(action_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	((tox_jni_globals_t *) messenger)->ac = data;
+	tox_callback_action(((tox_jni_globals_t *) messenger)->tox,
+			(void *) callback_action, data);
+}
+
+static void callback_action(Tox * tox, int friendnumber, uint8_t *action,
+		uint16_t length, void *ptr) {
+	action_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(ILjava/lang/String;)V");
+	jstring _action = (*data->env)->NewStringUTF(data->env, action);
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			_action);
+}
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onnamechange(JNIEnv * env,
+		jobject obj, jlong messenger, jobject callback) {
+	namechange_callback_t *data = malloc(sizeof(namechange_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	((tox_jni_globals_t *) messenger)->nc = data;
+	tox_callback_namechange(((tox_jni_globals_t *) messenger)->tox,
+			(void *) callback_namechange, data);
+}
+
+static void callback_namechange(Tox * tox, int friendnumber, uint8_t *newname,
+		uint16_t length, void *ptr) {
+	namechange_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(ILjava/lang/String;)V");
+	jstring _newname = (*data->env)->NewStringUTF(data->env, newname);
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			_newname);
 }
 

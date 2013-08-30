@@ -21,4 +21,4 @@ JTox.h : JTox.class
 	javah -classpath $(CLASS_PATH) $(PACKAGE_NAME).$*
 
 clean :
-	rm -f libjtox.so JTox.o im_tox_jtoxcore_JTox.h
+	rm -f libjtox.so JTox.o
