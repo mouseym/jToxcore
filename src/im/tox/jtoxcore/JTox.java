@@ -23,8 +23,10 @@ package im.tox.jtoxcore;
 
 import java.net.InetSocketAddress;
 
+import im.tox.jtoxcore.callbacks.OnActionCallback;
 import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
 import im.tox.jtoxcore.callbacks.OnMessageCallback;
+import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
 
 /**
  * This is the main wrapper class for the tox library. It contains wrapper
@@ -50,13 +52,11 @@ public class JTox {
 	 * nature of the native calls, this call is <i>unsafe<i>. Calling it with an
 	 * arbitrary long that was not obtained from another JTox instance will
 	 * result in undefined behavior when calling other methods on this instance.
-	 * This method is mainly aimed at Android Developers to ease passing the
-	 * JTox instance around between different activities.
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
 	 */
-	private JTox(long messengerPointer) {
+	public JTox(long messengerPointer) {
 		this.messengerPointer = messengerPointer;
 	}
 
@@ -111,10 +111,13 @@ public class JTox {
 	 *            an optional message you want to send to your friend
 	 * @return the local number of the friend in your list
 	 * @throws ToxException
-	 *             in case an error code is returned by the native tox_addfriend
-	 *             call
+	 *             if the instance has been killed or an error code is returned
+	 *             by the native tox_addfriend call
 	 */
 	public int addFriend(String address, String data) throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		int errcode = tox_addfriend(this.messengerPointer, address, data);
 
 		if (errcode >= 0) {
@@ -131,17 +134,32 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @param address
 	 *            the address of the client you want to add
+	 * @return the local number of the friend in your list
 	 */
 	private native int tox_addfriend_norequest(long messengerPointer,
 			String address);
 
+	/**
+	 * Confirm a friend request, or add a friend to your own list without
+	 * sending them a friend request
+	 * 
+	 * @param address
+	 *            address of the friend to add
+	 * @return the local number of the friend in your list
+	 * @throws ToxException
+	 *             if the instance was killed or an error occurred when adding
+	 *             the friend
+	 */
 	public int confirmRequest(String address) throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		int errcode = tox_addfriend_norequest(this.messengerPointer, address);
 
 		if (errcode >= 0) {
 			return errcode;
 		} else {
-			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			throw new ToxException(errcode);
 		}
 	}
 
@@ -155,10 +173,18 @@ public class JTox {
 	 */
 	private native String tox_getaddress(long messengerPointer);
 
+	/**
+	 * Get our own address
+	 * 
+	 * @return our client's address
+	 * @throws ToxException
+	 *             when the instance has been killed or an error occurred when
+	 *             trying to get our address
+	 */
 	public String getAddress() throws ToxException {
 		String address = tox_getaddress(this.messengerPointer);
 
-		if (address == null) {
+		if (address == null || address.equals("")) {
 			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
 		} else {
 			return address;
@@ -183,11 +209,14 @@ public class JTox {
 	 * 
 	 * @param clientid
 	 *            the friend's public key
-	 * @throws ToxException
-	 *             when the friend does not exist
 	 * @return the local id of the specified friend
+	 * @throws ToxException
+	 *             if the instance has been killed or the friend does not exist
 	 */
 	public int getFriendId(String clientid) throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		int errcode = tox_getfriend_id(this.messengerPointer, clientid);
 
 		if (errcode == -1) {
@@ -209,10 +238,23 @@ public class JTox {
 	private native String tox_getclient_id(long messengerPointer,
 			int friendnumber);
 
+	/**
+	 * Get the client id for a given friendnumber
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @return client id for the given friend
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the client id
+	 */
 	public String getClientId(int friendnumber) throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		String result = tox_getclient_id(this.messengerPointer, friendnumber);
 
-		if (result == null) {
+		if (result == null || result.equals("")) {
 			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
 		} else {
 			return result;
@@ -231,8 +273,14 @@ public class JTox {
 	 * The main tox loop that needs to be run at least 20 times per second. When
 	 * implementing this, either use it in a main loop to guarantee execution,
 	 * or start an asynchronous Thread or Service to do it for you.
+	 * 
+	 * @throws ToxException
+	 *             if the instance has been killed
 	 */
-	public void doTox() {
+	public void doTox() throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		tox_do(this.messengerPointer);
 	}
 
@@ -258,8 +306,14 @@ public class JTox {
 	 *            A IP-port pair to connect to
 	 * @param pubkey
 	 *            public key of the bootstrap node
+	 * @throws ToxException
+	 *             if the instance has been killed
 	 */
-	public void bootstrap(InetSocketAddress address, String pubkey) {
+	public void bootstrap(InetSocketAddress address, String pubkey)
+			throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		tox_bootstrap(messengerPointer, address.getAddress().getAddress(),
 				address.getPort(), pubkey);
 	}
@@ -276,8 +330,13 @@ public class JTox {
 	 * Check if the client is connected to the DHT
 	 * 
 	 * @return true if connected, false otherwise
+	 * @throws ToxException
+	 *             if the instance has been killed
 	 */
-	public boolean isConnected() {
+	public boolean isConnected() throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		if (tox_isconnected(messengerPointer) == 0) {
 			return false;
 		} else {
@@ -304,9 +363,128 @@ public class JTox {
 	 * 
 	 * @param callback
 	 *            the callback to set for receiving friend requests
+	 * @throws ToxException
+	 *             if the instance has been killed
 	 */
-	public void setOnFriendRequestCallback(OnFriendRequestCallback callback) {
+	public void setOnFriendRequestCallback(OnFriendRequestCallback callback)
+			throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
 		tox_onfriendrequest(this.messengerPointer, callback);
+	}
+
+	/**
+	 * Native call to tox_kill
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 */
+	private native void tox_kill(long messengerPointer);
+
+	/**
+	 * Kills the current instance, triggering a cleanup of all internal data
+	 * structures. All subsequent calls on any method in this class will result
+	 * in a {@link ToxException} with {@link ToxError#TOX_KILLED_INSTANCE} as an
+	 * error code.
+	 * 
+	 * @throws ToxException
+	 *             in case the instance has already been killed
+	 */
+	public void killTox() throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
+
+		tox_kill(this.messengerPointer);
+		this.messengerPointer = 0;
+	}
+
+	/**
+	 * Native call to tox_callback_friendmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving messages
+	 */
+	private native void tox_onfriendmessage(long messengerPointer,
+			OnMessageCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving messages. Any time a
+	 * message is received on this Tox instance, the
+	 * {@link OnMessageCallback#execute(int, String)} method will be executed.
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving messages
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnMessageCallback(OnMessageCallback callback)
+			throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
+		tox_onfriendmessage(this.messengerPointer, callback);
+	}
+
+	/**
+	 * Native call to tox_callback_action
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving actions
+	 */
+	private native void tox_onaction(long messengerPointer,
+			OnActionCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving actions. Any time an
+	 * action is received on this Tox instance, the
+	 * {@link OnActionCallback#execute(int, String)} method will be executed.
+	 * 
+	 * @param callback
+	 *            the callback to set for receivin actions
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnActionCallback(OnActionCallback callback)
+			throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
+		tox_onaction(this.messengerPointer, callback);
+	}
+
+	/**
+	 * Native call to tox_callback_namechange
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving name changes
+	 */
+	private native void tox_onnamechange(long messengerPointer,
+			OnNameChangeCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving name changes. Any time
+	 * a name change is received on this tox instance, the
+	 * {@link OnNameChangeCallback#execute(int, String)} method will be executed
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving name changes
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnNameChangeCallback(OnNameChangeCallback callback)
+			throws ToxException {
+		if (this.messengerPointer == 0) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
+		tox_onnamechange(this.messengerPointer, callback);
 	}
 
 	/**
