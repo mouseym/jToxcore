@@ -21,12 +21,15 @@
 
 package im.tox.jtoxcore;
 
-import java.net.InetSocketAddress;
-
 import im.tox.jtoxcore.callbacks.OnActionCallback;
 import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
 import im.tox.jtoxcore.callbacks.OnMessageCallback;
 import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
+
+import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This is the main wrapper class for the tox library. It contains wrapper
@@ -42,21 +45,26 @@ public class JTox {
 		System.loadLibrary("jtox");
 	}
 
+	private static Set<Long> validPointers = Collections
+			.synchronizedSet(new HashSet<Long>());
+
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
 	 */
 	private long messengerPointer;
 
 	/**
-	 * Create a new instance of JTox with a given messengerPointer. Due to the
-	 * nature of the native calls, this call is <i>unsafe<i>. Calling it with an
-	 * arbitrary long that was not obtained from another JTox instance will
-	 * result in undefined behavior when calling other methods on this instance.
+	 * Create a new instance of JTox with a given messengerPointer.
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
+	 * @throws ToxException
+	 *             if the long passed to the constructor is not a valid pointer
 	 */
-	public JTox(long messengerPointer) {
+	public JTox(long messengerPointer) throws ToxException {
+		if (!validPointers.contains(messengerPointer)) {
+			throw new ToxException(ToxError.TOX_INVALID_POINTER);
+		}
 		this.messengerPointer = messengerPointer;
 	}
 
@@ -82,6 +90,7 @@ public class JTox {
 		if (pointer == 0) {
 			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
 		} else {
+			validPointers.add(pointer);
 			return new JTox(pointer);
 		}
 	}
@@ -115,7 +124,7 @@ public class JTox {
 	 *             by the native tox_addfriend call
 	 */
 	public int addFriend(String address, String data) throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		int errcode = tox_addfriend(this.messengerPointer, address, data);
@@ -151,7 +160,7 @@ public class JTox {
 	 *             the friend
 	 */
 	public int confirmRequest(String address) throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		int errcode = tox_addfriend_norequest(this.messengerPointer, address);
@@ -214,7 +223,7 @@ public class JTox {
 	 *             if the instance has been killed or the friend does not exist
 	 */
 	public int getFriendId(String clientid) throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		int errcode = tox_getfriend_id(this.messengerPointer, clientid);
@@ -249,7 +258,7 @@ public class JTox {
 	 *             attempting to fetch the client id
 	 */
 	public String getClientId(int friendnumber) throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		String result = tox_getclient_id(this.messengerPointer, friendnumber);
@@ -278,7 +287,7 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public void doTox() throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_do(this.messengerPointer);
@@ -311,7 +320,7 @@ public class JTox {
 	 */
 	public void bootstrap(InetSocketAddress address, String pubkey)
 			throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_bootstrap(messengerPointer, address.getAddress().getAddress(),
@@ -334,7 +343,7 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public boolean isConnected() throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		if (tox_isconnected(messengerPointer) == 0) {
@@ -368,7 +377,7 @@ public class JTox {
 	 */
 	public void setOnFriendRequestCallback(OnFriendRequestCallback callback)
 			throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_onfriendrequest(this.messengerPointer, callback);
@@ -392,10 +401,11 @@ public class JTox {
 	 *             in case the instance has already been killed
 	 */
 	public void killTox() throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
-
+		
+		validPointers.remove(this.messengerPointer);
 		tox_kill(this.messengerPointer);
 		this.messengerPointer = 0;
 	}
@@ -423,7 +433,7 @@ public class JTox {
 	 */
 	public void setOnMessageCallback(OnMessageCallback callback)
 			throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_onfriendmessage(this.messengerPointer, callback);
@@ -452,7 +462,7 @@ public class JTox {
 	 */
 	public void setOnActionCallback(OnActionCallback callback)
 			throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_onaction(this.messengerPointer, callback);
@@ -481,7 +491,7 @@ public class JTox {
 	 */
 	public void setOnNameChangeCallback(OnNameChangeCallback callback)
 			throws ToxException {
-		if (this.messengerPointer == 0) {
+		if (validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 		tox_onnamechange(this.messengerPointer, callback);
