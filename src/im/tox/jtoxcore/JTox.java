@@ -22,9 +22,11 @@
 package im.tox.jtoxcore;
 
 import im.tox.jtoxcore.callbacks.OnActionCallback;
+import im.tox.jtoxcore.callbacks.OnConnectionStatusCallback;
 import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
 import im.tox.jtoxcore.callbacks.OnMessageCallback;
 import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
+import im.tox.jtoxcore.callbacks.OnReadReceiptCallback;
 import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
 
 import java.net.InetSocketAddress;
@@ -650,6 +652,75 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
 			tox_onstatusmessage(this.messengerPointer, callback);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_callback_read_receipt
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving read receipts
+	 */
+	private native void tox_on_read_receipt(long messengerPointer,
+			OnReadReceiptCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving read receipts. Any
+	 * time a read receipt is received on this tox instance, the
+	 * {@link OnReadReceiptCallback#execute(int, int)}, method will be executed
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving read receipts
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnReadReceiptCallback(OnReadReceiptCallback callback)
+			throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			tox_on_read_receipt(this.messengerPointer, callback);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_callback_connectionstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving receipts
+	 */
+	private native void tox_on_connectionstatus(long messengerPointer,
+			OnConnectionStatusCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving connection status
+	 * changes. Any time a connection status change is received on this tox
+	 * instance, the {@link OnConnectionStatusCallback#execute(int, boolean)}
+	 * method will be executed
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving connection status changes
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnConnectionStatusCallback(
+			OnConnectionStatusCallback callback) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			tox_on_connectionstatus(this.messengerPointer, callback);
 		} finally {
 			lock.unlock();
 		}

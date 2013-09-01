@@ -427,3 +427,66 @@ static void callback_statusmessage(Tox *tox, int friendnumber,
 			_newstatus);
 }
 
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1on_1read_1receipt(
+		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->rrc) {
+		if (_messenger->rrc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->rrc->jobj);
+		}
+		free(_messenger->rrc);
+	}
+
+	read_receipt_callback_t *data = malloc(sizeof(read_receipt_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	_messenger->rrc = data;
+	tox_callback_read_receipt(_messenger->tox, (void *) callback_read_receipt,
+			data);
+}
+
+static void callback_read_receipt(Tox *tox, int friendnumber, uint32_t receipt,
+		void *ptr) {
+	read_receipt_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(II)V");
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			receipt);
+}
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1on_1connectionstatus(
+		JNIEnv *env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->csc) {
+		if (_messenger->csc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->csc->jobj);
+		}
+		free(_messenger->csc);
+	}
+
+	connectionstatus_callback_t *data = malloc(sizeof(read_receipt_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	_messenger->csc = data;
+	tox_callback_connectionstatus(_messenger->tox,
+			(void *) callback_connectionstatus, data);
+}
+
+static void callback_connectionstatus(Tox *tox, int friendnumber,
+		uint8_t newstatus, void *ptr) {
+	connectionstatus_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(IZ)V");
+	jboolean _newstatus;
+	if (newstatus == 0) {
+		_newstatus = JNI_TRUE;
+	} else {
+		_newstatus = JNI_FALSE;
+	}
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			_newstatus);
+}
