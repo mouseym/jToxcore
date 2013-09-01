@@ -277,14 +277,21 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getclient_1id(
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendrequest(
 		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->frqc) {
+		if (_messenger->frqc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->frqc->jobj);
+		}
+		free(_messenger->frqc);
+	}
 
 	friendrequest_callback_t *data = malloc(sizeof(friendrequest_callback_t));
 	data->env = env;
 	data->jobj = (*env)->NewGlobalRef(env, callback);
 	(*env)->DeleteLocalRef(env, callback);
-	((tox_jni_globals_t *) messenger)->frqc = data;
-	tox_callback_friendrequest(((tox_jni_globals_t *) messenger)->tox,
-			(void *) callback_friendrequest, data);
+	_messenger->frqc = data;
+	tox_callback_friendrequest(_messenger->tox, (void *) callback_friendrequest,
+			data);
 }
 
 static void callback_friendrequest(uint8_t *pubkey, uint8_t *message,
@@ -303,14 +310,21 @@ static void callback_friendrequest(uint8_t *pubkey, uint8_t *message,
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendmessage(
 		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->frmc) {
+		if (_messenger->frmc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->frmc->jobj);
+		}
+		free(_messenger->frmc);
+	}
+
 	friendmessage_callback_t *data = malloc(sizeof(friendmessage_callback_t));
 	data->env = env;
 	data->jobj = (*env)->NewGlobalRef(env, callback);
 	(*env)->DeleteLocalRef(env, callback);
-	((tox_jni_globals_t *) messenger)->frmc = data;
-	tox_callback_friendmessage(((tox_jni_globals_t *) messenger)->tox,
-			(void *) callback_friendmessage, data);
-
+	_messenger->frmc = data;
+	tox_callback_friendmessage(_messenger->tox, (void *) callback_friendmessage,
+			data);
 }
 
 static void callback_friendmessage(Tox * tox, int friendnumber,
@@ -326,13 +340,20 @@ static void callback_friendmessage(Tox * tox, int friendnumber,
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onaction(JNIEnv * env,
 		jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->ac) {
+		if (_messenger->ac->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->ac->jobj);
+		}
+		free(_messenger->ac);
+	}
+
 	action_callback_t *data = malloc(sizeof(action_callback_t));
 	data->env = env;
 	data->jobj = (*env)->NewGlobalRef(env, callback);
 	(*env)->DeleteLocalRef(env, callback);
-	((tox_jni_globals_t *) messenger)->ac = data;
-	tox_callback_action(((tox_jni_globals_t *) messenger)->tox,
-			(void *) callback_action, data);
+	_messenger->ac = data;
+	tox_callback_action(_messenger->tox, (void *) callback_action, data);
 }
 
 static void callback_action(Tox * tox, int friendnumber, uint8_t *action,
@@ -348,13 +369,21 @@ static void callback_action(Tox * tox, int friendnumber, uint8_t *action,
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onnamechange(JNIEnv * env,
 		jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->nc) {
+		if (_messenger->nc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->nc->jobj);
+		}
+		free(_messenger->nc);
+	}
+
 	namechange_callback_t *data = malloc(sizeof(namechange_callback_t));
 	data->env = env;
 	data->jobj = (*env)->NewGlobalRef(env, callback);
 	(*env)->DeleteLocalRef(env, callback);
-	((tox_jni_globals_t *) messenger)->nc = data;
-	tox_callback_namechange(((tox_jni_globals_t *) messenger)->tox,
-			(void *) callback_namechange, data);
+	_messenger->nc = data;
+	tox_callback_namechange(_messenger->tox, (void *) callback_namechange,
+			data);
 }
 
 static void callback_namechange(Tox * tox, int friendnumber, uint8_t *newname,
