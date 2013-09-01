@@ -397,3 +397,33 @@ static void callback_namechange(Tox * tox, int friendnumber, uint8_t *newname,
 			_newname);
 }
 
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onstatusmessage(
+		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->smc) {
+		if (_messenger->smc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->smc->jobj);
+		}
+		free(_messenger->smc);
+	}
+
+	statusmessage_callback_t *data = malloc(sizeof(statusmessage_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	_messenger->smc = data;
+	tox_callback_statusmessage(_messenger->tox, (void *) callback_statusmessage,
+			data);
+}
+
+static void callback_statusmessage(Tox *tox, int friendnumber,
+		uint8_t *newstatus, uint16_t length, void *ptr) {
+	statusmessage_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(ILjava/lang/String;)V");
+	jstring _newstatus = (*data->env)->NewStringUTF(data->env, newstatus);
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			_newstatus);
+}
+

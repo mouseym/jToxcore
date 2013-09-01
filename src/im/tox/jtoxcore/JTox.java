@@ -25,6 +25,7 @@ import im.tox.jtoxcore.callbacks.OnActionCallback;
 import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
 import im.tox.jtoxcore.callbacks.OnMessageCallback;
 import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
+import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
@@ -614,6 +615,41 @@ public class JTox {
 			}
 
 			tox_onnamechange(this.messengerPointer, callback);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_callback_statusmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param callback
+	 *            the callback to set for receiving status message changes
+	 */
+	private native void tox_onstatusmessage(long messengerPointer,
+			OnStatusMessageCallback callback);
+
+	/**
+	 * Method used to set a callback method for receiving status message
+	 * changes. Any time a status message change is received on ths tox
+	 * instance, the {@link OnStatusMessageCallback#execute(int, String)} method
+	 * will be executed
+	 * 
+	 * @param callback
+	 *            the callback to set for receiving status message changes
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setOnStatusMessageCallback(OnStatusMessageCallback callback)
+			throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			tox_onstatusmessage(this.messengerPointer, callback);
 		} finally {
 			lock.unlock();
 		}
