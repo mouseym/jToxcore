@@ -1,4 +1,4 @@
-/* im_tox_jtoxcore_JTox.c
+/* JTox.c
  *
  *  Copyright (C) 2013 Tox project All Rights Reserved.
  *
