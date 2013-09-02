@@ -49,15 +49,23 @@ public class JTox {
 		System.loadLibrary("jtox");
 	}
 
-	private ReentrantLock lock;
+	/**
+	 * This field contains the lock used for thread safety
+	 */
+	protected final ReentrantLock lock;
 
+	/**
+	 * Map containing associations between pointers and Locks. This is used for
+	 * acquiring the correct lock, as well as checking whether a pointer is
+	 * still valid
+	 */
 	private static Map<Long, ReentrantLock> validPointers = Collections
 			.synchronizedMap(new HashMap<Long, ReentrantLock>());
 
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
 	 */
-	private long messengerPointer;
+	protected final long messengerPointer;
 
 	/**
 	 * Checks whether the given pointer points to a valid tox instance
@@ -66,7 +74,7 @@ public class JTox {
 	 *            the pointer to check
 	 * @return true if valid, false otherwise
 	 */
-	private boolean isValidPointer(long messengerPointer) {
+	protected final boolean isValidPointer(long messengerPointer) {
 		return validPointers.containsKey(messengerPointer);
 	}
 
@@ -78,24 +86,8 @@ public class JTox {
 	 *            the pointer to acquire a lock for
 	 * @return the lock for the specified pointer
 	 */
-	private static ReentrantLock getLock(long messengerPointer) {
+	protected static final ReentrantLock getLock(long messengerPointer) {
 		return validPointers.get(messengerPointer);
-	}
-
-	/**
-	 * Create a new instance of JTox with a given messengerPointer.
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @throws ToxException
-	 *             if the long passed to the constructor is not a valid pointer
-	 */
-	public JTox(long messengerPointer) throws ToxException {
-		if (!isValidPointer(messengerPointer)) {
-			throw new ToxException(ToxError.TOX_INVALID_POINTER);
-		}
-		this.messengerPointer = messengerPointer;
-		this.lock = getLock(messengerPointer);
 	}
 
 	/**
@@ -103,25 +95,24 @@ public class JTox {
 	 * 
 	 * @return the pointer to the messenger struct on success, 0 on failure
 	 */
-	private static native long tox_new();
+	private native long tox_new();
 
 	/**
 	 * Creates a new instance of JTox and stores the pointer to the internal
-	 * struct in messengerPointer. We are not using a constructor here in order
-	 * to avoid partial objects being created when the native calls fail
+	 * struct in messengerPointer.
 	 * 
 	 * @return a new JTox instance
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
-	public static JTox newTox() throws ToxException {
+	public JTox() throws ToxException {
 		long pointer = tox_new();
-
 		if (pointer == 0) {
 			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
 		} else {
-			validPointers.put(pointer, new ReentrantLock());
-			return new JTox(pointer);
+			this.messengerPointer = pointer;
+			this.lock = new ReentrantLock();
+			validPointers.put(pointer, this.lock);
 		}
 	}
 
@@ -511,7 +502,6 @@ public class JTox {
 		} finally {
 			lock.unlock();
 		}
-		this.messengerPointer = 0;
 	}
 
 	/**
@@ -724,12 +714,5 @@ public class JTox {
 		} finally {
 			lock.unlock();
 		}
-	}
-
-	/**
-	 * @return the pointer to the internal messenger struct, as a long
-	 */
-	public long getPointer() {
-		return this.messengerPointer;
 	}
 }
