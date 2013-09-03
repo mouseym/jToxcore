@@ -794,4 +794,36 @@ public class JTox {
 			lock.unlock();
 		}
 	}
+
+	/**
+	 * Native call to tox_delfriend
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @return true on success, false on failure
+	 */
+	private native boolean tox_delfriend(long messengerPointer, int friendnumber);
+
+	/**
+	 * Method used to delete a friend
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @return true on success, false on failure
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public boolean deleteFriend(int friendnumber) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			return tox_delfriend(this.messengerPointer, friendnumber);
+		} finally {
+			lock.unlock();
+		}
+	}
 }
