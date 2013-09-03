@@ -496,15 +496,19 @@ static void callback_userstatus(Tox *tox, int friendnumber,
 			"Lim/tox/jtoxcore/ToxUserStatus;");
 
 	char *enum_name;
-
-	if (status == TOX_USERSTATUS_NONE) {
-		enum_name = "TOX_USERSTATUS_NONE";
-	} else if (status == TOX_USERSTATUS_AWAY) {
-		enum_name = "TOX_USERSTATUS_AWAY";
-	} else if (status == TOX_USERSTATUS_BUSY) {
-		enum_name = "TOX_USERSTATUS_BUSY";
-	} else {
-		enum_name = "TOX_USERSTATUS_INVALID";
+	switch (status) {
+		case TOX_USERSTATUS_NONE:
+			enum_name = "TOX_USERSTATUS_NONE";
+			break;
+		case TOX_USERSTATUS_AWAY:
+			enum_name = "TOX_USERSTATUS_AWAY";
+			break;
+		case TOX_USERSTATUS_BUSY:
+			enum_name = "TOX_USERSTATUS_BUSY";
+			break;
+		default:
+			enum_name = "TOX_USERSTATUS_INVALID";
+			break;
 	}
 
 	jfieldID fieldID = (*data->env)->GetStaticFieldID(data->env, us_enum,
