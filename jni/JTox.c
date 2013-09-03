@@ -307,6 +307,30 @@ JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendstatus(
 	return enum_val;
 }
 
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_String_2(
+		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber,
+		jstring message) {
+	const char *_message = (*env)->GetStringUTFChars(env, message, 0);
+	uint8_t *__message = strdup(_message);
+
+	uint32_t result = tox_sendmessage(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber, __message, strlen(__message));
+	(*env)->ReleaseStringUTFChars(env, message, _message);
+	return result;
+}
+
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_String_2I(
+		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber,
+		jstring message, jint messageID) {
+	const char *_message = (*env)->GetStringUTFChars(env, message, 0);
+	uint8_t *__message = strdup(_message);
+
+	uint32_t result = tox_sendmessage(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber, __message, strlen(__message), messageID);
+	(*env)->ReleaseStringUTFChars(env, message, _message);
+	return result;
+}
+
 /**
  * End general section
  */
@@ -497,18 +521,18 @@ static void callback_userstatus(Tox *tox, int friendnumber,
 
 	char *enum_name;
 	switch (status) {
-		case TOX_USERSTATUS_NONE:
-			enum_name = "TOX_USERSTATUS_NONE";
-			break;
-		case TOX_USERSTATUS_AWAY:
-			enum_name = "TOX_USERSTATUS_AWAY";
-			break;
-		case TOX_USERSTATUS_BUSY:
-			enum_name = "TOX_USERSTATUS_BUSY";
-			break;
-		default:
-			enum_name = "TOX_USERSTATUS_INVALID";
-			break;
+	case TOX_USERSTATUS_NONE:
+		enum_name = "TOX_USERSTATUS_NONE";
+		break;
+	case TOX_USERSTATUS_AWAY:
+		enum_name = "TOX_USERSTATUS_AWAY";
+		break;
+	case TOX_USERSTATUS_BUSY:
+		enum_name = "TOX_USERSTATUS_BUSY";
+		break;
+	default:
+		enum_name = "TOX_USERSTATUS_INVALID";
+		break;
 	}
 
 	jfieldID fieldID = (*data->env)->GetStaticFieldID(data->env, us_enum,

@@ -826,4 +826,101 @@ public class JTox {
 			lock.unlock();
 		}
 	}
+
+	/**
+	 * Native call to tox_sendmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @return the message ID on success, 0 on failure
+	 */
+	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+			String message);
+
+	/**
+	 * Sends a message to the specified friend
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @return the message ID of the sent message. If you want to receive read
+	 *         receipts, hang on to this value.
+	 * @throws ToxException
+	 *             if the instance has been killed or the message was not sent
+	 */
+	public int sendMessage(int friendnumber, String message)
+			throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			int result = tox_sendmessage(this.messengerPointer, friendnumber,
+					message);
+			if (result == 0) {
+				throw new ToxException(ToxError.TOX_SEND_FAILED);
+			} else {
+				return result;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_sendmessage_withid
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @param messageID
+	 *            the message ID to use
+	 * @return the message ID on success, 0 on failure
+	 */
+	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+			String message, int messageID);
+
+	/**
+	 * Sends a message to the specified friend, with a specified ID
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @param messageID
+	 *            the message ID to use
+	 * @return the message ID of the sent message. If you want to receive read
+	 *         receipts, hang on to this value.
+	 * @throws ToxException
+	 *             if the instance has been killed or the message was not sent.
+	 */
+	public int sendMessage(int friendnumber, String message, int messageID)
+			throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			int result = tox_sendmessage(this.messengerPointer, friendnumber,
+					message, messageID);
+
+			if (result == 0) {
+				throw new ToxException(ToxError.TOX_SEND_FAILED);
+			} else {
+				return result;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
 }
