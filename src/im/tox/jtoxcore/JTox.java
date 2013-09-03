@@ -820,7 +820,7 @@ public class JTox {
 			if (!isValidPointer(this.messengerPointer)) {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
-			if(tox_delfriend(this.messengerPointer, friendnumber)) {
+			if (tox_delfriend(this.messengerPointer, friendnumber)) {
 				throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
 			}
 		} finally {
@@ -923,5 +923,44 @@ public class JTox {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/**
+	 * Native call to tox_setname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param newname
+	 *            the new name
+	 * @return true on success, false on failure
+	 */
+	private native boolean tox_setname(long messengerPointer, String newname);
+
+	/**
+	 * Sets our nickname
+	 * 
+	 * @param newname
+	 *            the new name to set. Maximum length is 127.
+	 * @throws ToxException
+	 *             if the instance was killed, the name was too long, or another
+	 *             error occured
+	 */
+	public void setName(String newname) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			if (newname.length() > 127) {
+				throw new ToxException(ToxError.TOX_NAME_TOO_LONG);
+			}
+
+			if (tox_setname(this.messengerPointer, newname)) {
+				throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			}
+		} finally {
+			lock.unlock();
+		}
+
 	}
 }
