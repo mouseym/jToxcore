@@ -427,6 +427,54 @@ static void callback_statusmessage(Tox *tox, int friendnumber,
 			_newstatus);
 }
 
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1on_1userstatus(
+		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
+	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
+	if (_messenger->usc) {
+		if (_messenger->usc->jobj) {
+			(*env)->DeleteGlobalRef(env, _messenger->usc->jobj);
+		}
+		free(_messenger->usc);
+	}
+
+	userstatus_callback_t *data = malloc(sizeof(read_receipt_callback_t));
+	data->env = env;
+	data->jobj = (*env)->NewGlobalRef(env, callback);
+	(*env)->DeleteLocalRef(env, callback);
+	_messenger->usc = data;
+	tox_callback_userstatus(_messenger->tox, (void *) callback_userstatus,
+			data);
+}
+
+static void callback_userstatus(Tox *tox, int friendnumber,
+		TOX_USERSTATUS status, void *ptr) {
+	userstatus_callback_t *data = ptr;
+	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
+	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
+			"(ILim/tox/jtoxcore/ToxUserStatus;)V");
+	jclass us_enum = (*data->env)->FindClass(data->env,
+			"Lim/tox/jtoxcore/ToxUserStatus;");
+
+	char *enum_name;
+
+	if (status == TOX_USERSTATUS_NONE) {
+		enum_name = "TOX_USERSTATUS_NONE";
+	} else if (status == TOX_USERSTATUS_AWAY) {
+		enum_name = "TOX_USERSTATUS_AWAY";
+	} else if (status == TOX_USERSTATUS_BUSY) {
+		enum_name = "TOX_USERSTATUS_BUSY";
+	} else {
+		enum_name = "TOX_USERSTATUS_INVALID";
+	}
+
+	jfieldID fieldID = (*data->env)->GetStaticFieldID(data->env, us_enum,
+			enum_name, "Lim/tox/jtoxcore/ToxUserStatus;");
+	jobject enum_val = (*data->env)->GetStaticObjectField(data->env, us_enum,
+			fieldID);
+	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
+			enum_val);
+}
+
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1on_1read_1receipt(
 		JNIEnv * env, jobject obj, jlong messenger, jobject callback) {
 	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
