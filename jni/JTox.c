@@ -269,12 +269,7 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getclient_1id(
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1delfriend(
 		JNIEnv * env, jobject obj, jlong messenger, jint friendnumber) {
-	if (tox_delfriend(((tox_jni_globals_t *) messenger)->tox, friendnumber)
-			== 0) {
-		return JNI_TRUE;
-	} else {
-		return JNI_FALSE;
-	}
+	return tox_delfriend(((tox_jni_globals_t *) messenger)->tox, friendnumber);
 }
 
 JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendstatus(
@@ -325,8 +320,8 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_
 	const char *_message = (*env)->GetStringUTFChars(env, message, 0);
 	uint8_t *__message = strdup(_message);
 
-	uint32_t result = tox_sendmessage(((tox_jni_globals_t *) messenger)->tox,
-			friendnumber, __message, strlen(__message), messageID);
+	uint32_t result = tox_sendmessage_withid(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber, messageID, __message, strlen(__message));
 	(*env)->ReleaseStringUTFChars(env, message, _message);
 	return result;
 }

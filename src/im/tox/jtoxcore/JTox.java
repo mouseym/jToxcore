@@ -811,17 +811,18 @@ public class JTox {
 	 * 
 	 * @param friendnumber
 	 *            the number of the friend
-	 * @return true on success, false on failure
 	 * @throws ToxException
-	 *             if the instance has been killed
+	 *             if the instance has been killed or an error occured
 	 */
-	public boolean deleteFriend(int friendnumber) throws ToxException {
+	public void deleteFriend(int friendnumber) throws ToxException {
 		lock.lock();
 		try {
 			if (!isValidPointer(this.messengerPointer)) {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
-			return tox_delfriend(this.messengerPointer, friendnumber);
+			if(tox_delfriend(this.messengerPointer, friendnumber)) {
+				throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			}
 		} finally {
 			lock.unlock();
 		}
