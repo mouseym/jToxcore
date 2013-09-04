@@ -802,7 +802,7 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @param friendnumber
 	 *            the number of the friend
-	 * @return true on success, false on failure
+	 * @return false on success, true on failure
 	 */
 	private native boolean tox_delfriend(long messengerPointer, int friendnumber);
 
@@ -932,7 +932,7 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @param newname
 	 *            the new name
-	 * @return true on success, false on failure
+	 * @return false on success, true on failure
 	 */
 	private native boolean tox_setname(long messengerPointer, String newname);
 
@@ -961,6 +961,44 @@ public class JTox {
 		} finally {
 			lock.unlock();
 		}
+	}
 
+	/**
+	 * Native call to tox_sendaction
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param action
+	 *            the action to send
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_sendaction(long messengerPointer,
+			int friendnumber, String action);
+
+	/**
+	 * Sends an IRC-like /me-action to a friend
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param action
+	 *            the action
+	 * @throws ToxException
+	 *             if the instance has been killed or the send failed
+	 */
+	public void sendAction(int friendnumber, String action) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			if (tox_sendaction(this.messengerPointer, friendnumber, action)) {
+				throw new ToxException(ToxError.TOX_SEND_FAILED);
+			}
+		} finally {
+			lock.unlock();
+		}
 	}
 }

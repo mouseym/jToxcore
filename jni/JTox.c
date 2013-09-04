@@ -324,6 +324,16 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_
 			friendnumber, messageID, __message, strlen(__message) + 1);
 }
 
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendaction(
+		JNIEnv * env, jobject obj, jlong messenger, jint friendnumber,
+		jstring action) {
+	const char *_action = (*env)->GetStringUTFChars(env, action, 0);
+	uint8_t *__action = strdup(_action);
+	(*env)->ReleaseStringUTFChars(env, action, _action);
+	return tox_sendaction(((tox_jni_globals_t *) messenger)->tox, friendnumber,
+			__action, strlen(__action) + 1);
+}
+
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1setname(JNIEnv *env,
 		jobject obj, jlong messenger, jstring newname) {
 	const char *_newname = (*env)->GetStringUTFChars(env, newname, 0);
