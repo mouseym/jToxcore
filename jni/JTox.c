@@ -414,6 +414,26 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getname(JNIEnv * env,
 	}
 }
 
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1userstatus(
+		JNIEnv * env, jobject obj, jlong messenger, jint userstatus) {
+	return tox_set_userstatus(((tox_jni_globals_t *) messenger)->tox,
+			userstatus) == 0 ? JNI_FALSE : JNI_TRUE;
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getstatusmessage(
+		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
+	int length = tox_get_statusmessage_size(tox, friendnumber);
+	uint8_t *status = malloc(length);
+	tox_copy_statusmessage(tox, friendnumber, status, length);
+	char *_status = malloc(length + 1);
+	nullterminate(status, length, _status);
+	jstring __status = (*env)->NewStringUTF(env, _status);
+	free(status);
+	free(_status);
+	return __status;
+}
+
 /**
  * End general section
  */
