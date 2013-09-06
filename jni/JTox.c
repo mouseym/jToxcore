@@ -405,9 +405,12 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getname(JNIEnv * env,
 		free(name);
 		return 0;
 	} else {
-		jstring _name = (*env)->NewStringUTF(env, name);
+		char *_name = malloc(ret + 1);
+		nullterminate(name, ret, _name);
+		jstring __name = (*env)->NewStringUTF(env, _name);
 		free(name);
-		return _name;
+		free(_name);
+		return __name;
 	}
 }
 
