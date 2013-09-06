@@ -1045,7 +1045,7 @@ public class JTox {
 			}
 
 			String name = tox_getselfname(this.messengerPointer);
-			if (name == null) {
+			if (name == null || name.isEmpty()) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			} else {
 				return name;
@@ -1082,7 +1082,7 @@ public class JTox {
 			if (!isValidPointer(this.messengerPointer)) {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
-			
+
 			try {
 				if (message.getBytes("UTF-8").length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
 					throw new ToxException(ToxError.TOX_TOOLONG);
@@ -1096,6 +1096,43 @@ public class JTox {
 			if (tox_set_statusmessage(this.messengerPointer, message)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_getname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the specified friend's name
+	 */
+	private native String tox_getname(long messengerPointer, int friendnumber);
+
+	/**
+	 * Get the specified friend's name
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the friend's name
+	 * @throws ToxException
+	 *             if the instance has been killed or an error occured
+	 */
+	public String getName(int friendnumber) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			String name = tox_getname(this.messengerPointer, friendnumber);
+			if (name == null || name.isEmpty()) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
+			return name;
 		} finally {
 			lock.unlock();
 		}

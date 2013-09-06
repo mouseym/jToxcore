@@ -58,6 +58,7 @@ void hex_to_addr(const char *hex, uint8_t *buf) {
 
 	for (i = 0; i < len; ++i, pos += 2)
 		sscanf(pos, "%2hhx", &buf[i]);
+	free(pos);
 }
 
 /**
@@ -212,8 +213,11 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
 	(*env)->ReleaseStringUTFChars(env, address, _address);
 	(*env)->ReleaseStringUTFChars(env, data, _data);
 
-	return tox_addfriend(((tox_jni_globals_t *) messenger)->tox, __address,
+	int ret = tox_addfriend(((tox_jni_globals_t *) messenger)->tox, __address,
 			__data, strlen(__data) + 1);
+
+	free(__data);
+	return ret;
 }
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
@@ -307,8 +311,11 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_
 	uint8_t *__message = strdup(_message);
 	(*env)->ReleaseStringUTFChars(env, message, _message);
 
-	return tox_sendmessage(((tox_jni_globals_t *) messenger)->tox, friendnumber,
-			__message, strlen(__message) + 1);
+	uint32_t mess_id = tox_sendmessage(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber, __message, strlen(__message) + 1);
+	free(__message);
+
+	return mess_id;
 }
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_String_2I(
@@ -318,8 +325,12 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_
 	uint8_t *__message = strdup(_message);
 	(*env)->ReleaseStringUTFChars(env, message, _message);
 
-	return tox_sendmessage_withid(((tox_jni_globals_t *) messenger)->tox,
-			friendnumber, messageID, __message, strlen(__message) + 1);
+	uint32_t mess_id = tox_sendmessage_withid(
+			((tox_jni_globals_t *) messenger)->tox, friendnumber, messageID,
+			__message, strlen(__message) + 1);
+	free(__message);
+
+	return mess_id;
 }
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendaction(
@@ -329,8 +340,10 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendaction(
 	uint8_t *__action = strdup(_action);
 	(*env)->ReleaseStringUTFChars(env, action, _action);
 
-	return tox_sendaction(((tox_jni_globals_t *) messenger)->tox, friendnumber,
-			__action, strlen(__action) + 1);
+	jboolean ret = tox_sendaction(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber, __action, strlen(__action) + 1);
+	free(__action);
+	return ret;
 }
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1setname(JNIEnv *env,
@@ -339,9 +352,12 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1setname(JNIEnv *env,
 	uint8_t *__newname = strdup(_newname);
 	(*env)->ReleaseStringUTFChars(env, newname, _newname);
 
-	return tox_setname(((tox_jni_globals_t *) messenger)->tox, __newname,
-			strlen(__newname) + 1) == 0 ? JNI_FALSE : JNI_TRUE;
+	jboolean ret =
+			tox_setname(((tox_jni_globals_t *) messenger)->tox, __newname,
+					strlen(__newname) + 1) == 0 ? JNI_FALSE : JNI_TRUE;
+	free(__newname);
 
+	return ret;
 }
 
 JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getselfname(
@@ -349,6 +365,11 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getselfname(
 	uint8_t *name = malloc(TOX_MAX_NAME_LENGTH);
 	uint16_t length = tox_getselfname(((tox_jni_globals_t *) messenger)->tox,
 			name, TOX_MAX_NAME_LENGTH);
+
+	if (length == 0) {
+		free(name);
+		return 0;
+	}
 	char *_name = malloc(TOX_MAX_NAME_LENGTH + 1);
 	nullterminate(name, length, _name);
 	jstring __name = (*env)->NewStringUTF(env, _name);
@@ -364,8 +385,30 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1statusmessage(
 	uint8_t *__newstatus = strdup(_newstatus);
 	(*env)->ReleaseStringUTFChars(env, newstatus, _newstatus);
 
-	return tox_set_statusmessage(((tox_jni_globals_t *) messenger)->tox,
-			__newstatus, strlen(__newstatus) + 1) == 0 ? JNI_FALSE : JNI_TRUE;
+	jboolean ret =
+			tox_set_statusmessage(((tox_jni_globals_t *) messenger)->tox,
+					__newstatus, strlen(__newstatus) + 1) == 0 ?
+			JNI_FALSE :
+																	JNI_TRUE;
+	free(__newstatus);
+
+	return ret;
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getname(JNIEnv * env,
+		jobject obj, jlong messenger, jint friendnumber) {
+	uint8_t *name = malloc(TOX_MAX_NAME_LENGTH);
+	int ret = tox_getname(((tox_jni_globals_t *) messenger)->tox, friendnumber,
+			name);
+
+	if (ret == -1) {
+		free(name);
+		return 0;
+	} else {
+		jstring _name = (*env)->NewStringUTF(env, name);
+		free(name);
+		return _name;
+	}
 }
 
 /**
