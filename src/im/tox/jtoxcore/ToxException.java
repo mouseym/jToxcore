@@ -54,7 +54,7 @@ public class ToxException extends Exception {
 		super();
 		switch (errcode) {
 		case -1:
-			this.error = ToxError.TOX_FAERR_TOOLONG;
+			this.error = ToxError.TOX_TOOLONG;
 			break;
 		case -2:
 			this.error = ToxError.TOX_FAERR_NOMESSAGE;
@@ -75,7 +75,7 @@ public class ToxException extends Exception {
 			this.error = ToxError.TOX_FAERR_NOMEM;
 			break;
 		default:
-			this.error = ToxError.TOX_FAERR_UNKNOWN;
+			this.error = ToxError.TOX_UNKNOWN;
 			break;
 		}
 	}

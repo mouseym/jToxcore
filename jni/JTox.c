@@ -340,9 +340,34 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1setname(JNIEnv *env,
 	(*env)->ReleaseStringUTFChars(env, newname, _newname);
 
 	return tox_setname(((tox_jni_globals_t *) messenger)->tox, __newname,
-			strlen(__newname) + 1) == 0 ? 0 : 1;
+			strlen(__newname) + 1) == 0 ? JNI_FALSE : JNI_TRUE;
 
 }
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getselfname(
+		JNIEnv *env, jobject obj, jlong messenger) {
+	uint8_t *name = malloc(TOX_MAX_NAME_LENGTH);
+	uint16_t length = tox_getselfname(((tox_jni_globals_t *) messenger)->tox,
+			name, TOX_MAX_NAME_LENGTH);
+	char *_name = malloc(TOX_MAX_NAME_LENGTH + 1);
+	nullterminate(name, length, _name);
+	jstring __name = (*env)->NewStringUTF(env, _name);
+	free(_name);
+	free(name);
+
+	return __name;
+}
+
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1statusmessage(
+		JNIEnv *env, jobject obj, jlong messenger, jstring newstatus) {
+	const char *_newstatus = (*env)->GetStringUTFChars(env, newstatus, 0);
+	uint8_t *__newstatus = strdup(_newstatus);
+	(*env)->ReleaseStringUTFChars(env, newstatus, _newstatus);
+
+	return tox_set_statusmessage(((tox_jni_globals_t *) messenger)->tox,
+			__newstatus, strlen(__newstatus) + 1) == 0 ? JNI_FALSE : JNI_TRUE;
+}
+
 /**
  * End general section
  */

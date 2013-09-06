@@ -30,6 +30,7 @@ import im.tox.jtoxcore.callbacks.OnReadReceiptCallback;
 import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
 import im.tox.jtoxcore.callbacks.OnUserStatusCallback;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +45,18 @@ import java.util.concurrent.locks.ReentrantLock;
  * 
  */
 public class JTox {
+
+	/**
+	 * Maximum length of a status message in Bytes. Non-ASCII characters take
+	 * multiple Bytes.
+	 */
+	public static final int TOX_MAX_STATUSMESSAGE_LENGTH = 128;
+
+	/**
+	 * Maximum length of a nickname in Bytes. Non-ASCII characters take multiple
+	 * Bytes.
+	 */
+	public static final int TOX_MAX_NICKNAME_LENGTH = 128;
 
 	static {
 		System.loadLibrary("sodium");
@@ -109,7 +122,7 @@ public class JTox {
 	public JTox() throws ToxException {
 		long pointer = tox_new();
 		if (pointer == 0) {
-			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
 			this.messengerPointer = pointer;
 			this.lock = new ReentrantLock();
@@ -240,7 +253,7 @@ public class JTox {
 		}
 
 		if (address == null || address.equals("")) {
-			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
 			return address;
 		}
@@ -283,7 +296,7 @@ public class JTox {
 		}
 
 		if (errcode == -1) {
-			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
 			return errcode;
 		}
@@ -326,7 +339,7 @@ public class JTox {
 		}
 
 		if (result == null || result.equals("")) {
-			throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
 			return result;
 		}
@@ -821,7 +834,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
 			if (tox_delfriend(this.messengerPointer, friendnumber)) {
-				throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
 			lock.unlock();
@@ -951,12 +964,18 @@ public class JTox {
 			if (!isValidPointer(this.messengerPointer)) {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
-			if (newname.length() > 127) {
-				throw new ToxException(ToxError.TOX_NAME_TOO_LONG);
+			try {
+				if (newname.getBytes("UTF-8").length >= TOX_MAX_NICKNAME_LENGTH) {
+					throw new ToxException(ToxError.TOX_TOOLONG);
+				}
+			} catch (UnsupportedEncodingException e) {
+				ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+				e1.initCause(e);
+				throw e1;
 			}
 
 			if (tox_setname(this.messengerPointer, newname)) {
-				throw new ToxException(ToxError.TOX_FAERR_UNKNOWN);
+				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
 			lock.unlock();
@@ -996,6 +1015,86 @@ public class JTox {
 
 			if (tox_sendaction(this.messengerPointer, friendnumber, action)) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_getselfname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return our name
+	 */
+	private native String tox_getselfname(long messengerPointer);
+
+	/**
+	 * Function to get our current name
+	 * 
+	 * @return our name
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public String getSelfName() throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			String name = tox_getselfname(this.messengerPointer);
+			if (name == null) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			} else {
+				return name;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_set_statusmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param message
+	 *            our new status message
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_set_statusmessage(long messengerPointer,
+			String message);
+
+	/**
+	 * Sets our status message
+	 * 
+	 * @param message
+	 *            our new status message
+	 * @throws ToxException
+	 *             if the instance has been killed, the message was too long, or
+	 *             another error occurred
+	 */
+	public void setStatusMessage(String message) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			
+			try {
+				if (message.getBytes("UTF-8").length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
+					throw new ToxException(ToxError.TOX_TOOLONG);
+				}
+			} catch (UnsupportedEncodingException e) {
+				ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+				e1.initCause(e);
+				throw e1;
+			}
+
+			if (tox_set_statusmessage(this.messengerPointer, message)) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
 			lock.unlock();
