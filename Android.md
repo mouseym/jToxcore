@@ -1,3 +1,5 @@
+(Note: This isn't done)
+
 1. To compile Toxcore JNI first setup the Android NDK
 
 2. Afterwards follow the standard INSTALL.md
