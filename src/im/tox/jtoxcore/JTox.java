@@ -1250,9 +1250,11 @@ public class JTox {
 
 	/**
 	 * Get the current status for the specified friend
+	 * 
 	 * @param friendnumber
-	 * @return
+	 * @return the friend's status
 	 * @throws ToxException
+	 *             if the instance has been killed
 	 */
 	public ToxUserStatus getUserStatus(int friendnumber) throws ToxException {
 		lock.lock();
@@ -1262,6 +1264,30 @@ public class JTox {
 			}
 
 			return tox_get_userstatus(this.messengerPointer, friendnumber);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_get_selfuserstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return our current status
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	private native ToxUserStatus tox_get_selfuserstatus(long messengerPointer);
+
+	public ToxUserStatus getSelfUserStatus() throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			return tox_get_selfuserstatus(this.messengerPointer);
 		} finally {
 			lock.unlock();
 		}

@@ -448,6 +448,32 @@ JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1userstatus(
 	return (*env)->GetStaticObjectField(env, us_enum, fieldID);
 }
 
+JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1selfuserstatus(
+		JNIEnv *env, jobject obj, jlong messenger) {
+	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
+	char *status;
+
+	switch (tox_get_userstatus(tox)) {
+	case TOX_USERSTATUS_NONE:
+		status = "TOX_USERSTATUS_NONE";
+		break;
+	case TOX_USERSTATUS_AWAY:
+		status = "TOX_USERSTATUS_AWAY";
+		break;
+	case TOX_USERSTATUS_BUSY:
+		status = "TOX_USERSTATUS_BUSY";
+		break;
+	default:
+		status = "TOX_USERSTATUS_INVALID";
+		break;
+	}
+
+	jclass us_enum = (*env)->FindClass(env, "Lim/tox/jtoxcore/ToxUserStatus");
+	jfieldID fieldID = (*env)->GetStaticFieldID(env, us_enum, status,
+			"Lim/tox/jtoxcore/ToxUserStatus");
+	return (*env)->GetStaticObjectField(env, us_enum, fieldID);
+}
+
 /**
  * End general section
  */
