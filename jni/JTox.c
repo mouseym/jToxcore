@@ -393,20 +393,59 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1userstatus(
 JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getstatusmessage(
 		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
 	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
-	int length = tox_get_statusmessage_size(tox, friendnumber);
-	uint8_t *status = malloc(length);
-	tox_copy_statusmessage(tox, friendnumber, status, length);
+	uint8_t status[TOX_MAX_STATUSMESSAGE_LENGTH];
+	int length = tox_copy_statusmessage(tox, (int) friendnumber, status,
+	TOX_MAX_STATUSMESSAGE_LENGTH);
 	char *_status = malloc(length + 1);
 	nullterminate(status, length, _status);
 	jstring __status = (*env)->NewStringUTF(env, _status);
-	free(status);
 	free(_status);
 	return __status;
 }
 
-JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendexists
-  (JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
-	return tox_friend_exists(((tox_jni_globals_t *) messenger)->tox, friendnumber);
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendexists(
+		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+	return tox_friend_exists(((tox_jni_globals_t *) messenger)->tox,
+			friendnumber);
+}
+
+JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getselfstatusmessage(
+		JNIEnv *env, jobject obj, jlong messenger) {
+	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
+	uint8_t status[TOX_MAX_STATUSMESSAGE_LENGTH];
+	int length = tox_copy_self_statusmessage(tox, status,
+	TOX_MAX_STATUSMESSAGE_LENGTH);
+	char *_status = malloc(length + 1);
+	nullterminate(status, length, _status);
+	jstring __status = (*env)->NewStringUTF(env, _status);
+	free(_status);
+	return __status;
+}
+
+JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1userstatus(
+		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
+	char *status;
+
+	switch (tox_get_userstatus(tox, friendnumber)) {
+	case TOX_USERSTATUS_NONE:
+		status = "TOX_USERSTATUS_NONE";
+		break;
+	case TOX_USERSTATUS_AWAY:
+		status = "TOX_USERSTATUS_AWAY";
+		break;
+	case TOX_USERSTATUS_BUSY:
+		status = "TOX_USERSTATUS_BUSY";
+		break;
+	default:
+		status = "TOX_USERSTATUS_INVALID";
+		break;
+	}
+
+	jclass us_enum = (*env)->FindClass(env, "Lim/tox/jtoxcore/ToxUserStatus");
+	jfieldID fieldID = (*env)->GetStaticFieldID(env, us_enum, status,
+			"Lim/tox/jtoxcore/ToxUserStatus");
+	return (*env)->GetStaticObjectField(env, us_enum, fieldID);
 }
 
 /**

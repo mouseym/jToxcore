@@ -1002,7 +1002,7 @@ public class JTox {
 			}
 
 			String name = tox_getselfname(this.messengerPointer);
-			if (name == null || name.isEmpty()) {
+			if (name == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			} else {
 				return name;
@@ -1086,7 +1086,7 @@ public class JTox {
 			}
 
 			String name = tox_getname(this.messengerPointer, friendnumber);
-			if (name == null || name.isEmpty()) {
+			if (name == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 			return name;
@@ -1197,6 +1197,71 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 			}
 			return tox_friendexists(this.messengerPointer, friendnumber);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_copy_self_statusmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return our current status message
+	 */
+	private native String tox_getselfstatusmessage(long messengerPointer);
+
+	/**
+	 * Gets our own status message
+	 * 
+	 * @return our current status message
+	 * @throws ToxException
+	 */
+	public String getStatusMessage() throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			String message = tox_getselfstatusmessage(this.messengerPointer);
+
+			if (message == null) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			} else {
+				return message;
+			}
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_get_userstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the friend's status
+	 */
+	private native ToxUserStatus tox_get_userstatus(long messengerPointer,
+			int friendnumber);
+
+	/**
+	 * Get the current status for the specified friend
+	 * @param friendnumber
+	 * @return
+	 * @throws ToxException
+	 */
+	public ToxUserStatus getUserStatus(int friendnumber) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			return tox_get_userstatus(this.messengerPointer, friendnumber);
 		} finally {
 			lock.unlock();
 		}
