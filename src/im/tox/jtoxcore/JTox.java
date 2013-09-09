@@ -1168,4 +1168,37 @@ public class JTox {
 			lock.unlock();
 		}
 	}
+
+	/**
+	 * Native call to tox_friendexists
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return true if friend exists, false otherwise
+	 */
+	private native boolean tox_friendexists(long messengerPointer,
+			int friendnumber);
+
+	/**
+	 * Check if the specified friend exists
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return true if friend exists, false otherwise
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public boolean friendExists(int friendnumber) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+			return tox_friendexists(this.messengerPointer, friendnumber);
+		} finally {
+			lock.unlock();
+		}
+	}
 }

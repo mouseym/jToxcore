@@ -404,6 +404,11 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getstatusmessage(
 	return __status;
 }
 
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendexists
+  (JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+	return tox_friend_exists(((tox_jni_globals_t *) messenger)->tox, friendnumber);
+}
+
 /**
  * End general section
  */
