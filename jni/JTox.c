@@ -453,7 +453,7 @@ JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1selfuserstatus(
 	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
 	char *status;
 
-	switch (tox_get_userstatus(tox)) {
+	switch (tox_get_selfuserstatus(tox)) {
 	case TOX_USERSTATUS_NONE:
 		status = "TOX_USERSTATUS_NONE";
 		break;
@@ -472,6 +472,13 @@ JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1selfuserstatus(
 	jfieldID fieldID = (*env)->GetStaticFieldID(env, us_enum, status,
 			"Lim/tox/jtoxcore/ToxUserStatus");
 	return (*env)->GetStaticObjectField(env, us_enum, fieldID);
+}
+
+JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1sends_1receipts(
+		JNIEnv *env, jobject obj, jlong messenger, jboolean send,
+		jint friendnumber) {
+	tox_set_sends_receipts(((tox_jni_globals_t *) messenger)->tox, friendnumber,
+			send);
 }
 
 /**
