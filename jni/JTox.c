@@ -274,36 +274,6 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1delfriend(
 			== 0 ? 0 : 1;
 }
 
-JNIEXPORT jobject JNICALL Java_im_tox_jtoxcore_JTox_tox_1friendstatus(
-		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
-	tox_jni_globals_t *_messenger = (tox_jni_globals_t *) messenger;
-	char *friendstatus;
-	switch (tox_friendstatus(_messenger->tox, friendnumber)) {
-	case TOX_FRIEND_ADDED:
-		friendstatus = "TOX_FRIEND_ADDED";
-		break;
-	case TOX_FRIEND_CONFIRMED:
-		friendstatus = "TOX_FRIEND_CONFIRMED";
-		break;
-	case TOX_FRIEND_REQUESTED:
-		friendstatus = "TOX_FRIEND_REQUESTED";
-		break;
-	case TOX_FRIEND_ONLINE:
-		friendstatus = "TOX_FRIEND_ONLINE";
-		break;
-	default:
-		friendstatus = "TOX_FRIEND_NOFRIEND";
-		break;
-	}
-
-	jclass enum_status = (*env)->FindClass(env, "Lim/tox/jtoxcore/ToxStatus");
-	jfieldID fieldID = (*env)->GetStaticFieldID(env, enum_status, friendstatus,
-			"Lim/tox/jtoxcore/ToxStatus");
-	jobject enum_val = (*env)->GetStaticObjectField(env, enum_status, fieldID);
-
-	return enum_val;
-}
-
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1sendmessage__JILjava_lang_String_2(
 		JNIEnv *env, jobject obj, jlong messenger, jint friendnumber,
 		jstring message) {

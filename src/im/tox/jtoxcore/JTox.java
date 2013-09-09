@@ -766,49 +766,6 @@ public class JTox {
 	}
 
 	/**
-	 * Native call to tox_friendstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @return the proper {@link ToxStatus} of the specified friend
-	 */
-	private native ToxStatus tox_friendstatus(long messengerPointer,
-			int friendnumber);
-
-	/**
-	 * Method to get the specified friend's status.
-	 * {@link ToxStatus#TOX_FRIEND_ADDED} means we added the friend, but the
-	 * friend request was not yet sent, possibly due to a network error, or
-	 * because the friend is offline<br>
-	 * {@link ToxStatus#TOX_FRIEND_REQUESTED} means we added the friend, and the
-	 * friend request was sent to him<br>
-	 * {@link ToxStatus#TOX_FRIEND_CONFIRMED} means we connected to this friend
-	 * at least once, or called {@link JTox#confirmRequest(String)} with the
-	 * public key of this friend<br>
-	 * {@link ToxStatus#TOX_NOFRIEND} means there is no friend with that number
-	 * {@link ToxStatus#TOX_FRIEND_ONLINE} means that friend is online
-	 * 
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @return a {@link ToxStatus} as described above
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public ToxStatus getFriendStatus(int friendnumber) throws ToxException {
-		lock.lock();
-		try {
-			if (!isValidPointer(this.messengerPointer)) {
-				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
-			}
-			return tox_friendstatus(this.messengerPointer, friendnumber);
-		} finally {
-			lock.unlock();
-		}
-	}
-
-	/**
 	 * Native call to tox_delfriend
 	 * 
 	 * @param messengerPointer
