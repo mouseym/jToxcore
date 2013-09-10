@@ -52,15 +52,17 @@ void addr_to_hex(uint8_t *addr, char *buf) {
 void hex_to_addr(const char *hex, uint8_t *buf) {
 	size_t len = strlen(hex);
 	uint8_t *val = malloc(len);
-	char *pos = malloc(strlen(hex) + 1);
-	pos = strdup(hex);
+	char *pos = strdup(hex);
 	int i;
-
-	for (i = 0; i < len; ++i, pos += 2)
+	for (i = 0; i < len; ++i, pos += 2) {
 		sscanf(pos, "%2hhx", &buf[i]);
+	}
+
+	for(i = 0; i < len; ++i) {
+		pos -= 2;
+	}
 	free(pos);
 }
-
 /**
  * Null-terminate the given string. Length is the length of the original string,
  * out must be allocated with a size of at least length+1
