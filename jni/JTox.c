@@ -193,6 +193,25 @@ JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1kill(JNIEnv * env,
 	free(globals);
 }
 
+JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1save(JNIEnv *env,
+		jobject obj, jlong messenger) {
+	Tox *tox = ((tox_jni_globals_t *) messenger)->tox;
+	uint32_t size = tox_size(tox);
+	uint8_t *data = malloc(size);
+	tox_save(tox, data);
+	jbyteArray bytes = (*env)->NewByteArray(env, size);
+	(*env)->SetByteArrayRegion(env, bytes, 0, size, data);
+	free(data);
+	return bytes;
+}
+
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1load(JNIEnv *env,
+		jobject obj, jlong messenger, jbyteArray bytes, jint length) {
+	uint8_t *data = (*env)->GetByteArrayElements(env, bytes, 0);
+	return tox_load(((tox_jni_globals_t *) messenger)->tox, data, length) == 0 ?
+			JNI_FALSE : JNI_TRUE;
+}
+
 /**
  * End maintenance section
  */

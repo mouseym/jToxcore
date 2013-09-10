@@ -2,7 +2,7 @@ TODO
 ========
 
 ## Core functionality ##
-- Loading and saving
+- All done!
 
 ## API Redesign ##
 

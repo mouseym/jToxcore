@@ -131,6 +131,20 @@ public class JTox {
 	}
 
 	/**
+	 * Creates a new instance of JTox and stores the pointer to the internal
+	 * struct in messengerPointer. Also attempts to load the specified byte
+	 * array into this instance
+	 * 
+	 * @return a new JTox instance backed by the specified data array
+	 * @throws ToxException
+	 *             when the native call indicates an error
+	 */
+	public JTox(byte[] data) throws ToxException {
+		this();
+		this.load(data);
+	}
+
+	/**
 	 * Native call to tox_addfriend
 	 * 
 	 * @param messengerPointer
@@ -1330,6 +1344,74 @@ public class JTox {
 
 			tox_set_sends_receipts(this.messengerPointer, sendReceipts,
 					friendnumber);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_save
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return a byte array containing the saved data
+	 */
+	private native byte[] tox_save(long messengerPointer);
+
+	/**
+	 * Save the internal messenger data to a byte array, which can be saved to a
+	 * file or database
+	 * 
+	 * @return a byte array containing the saved data
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public byte[] save() throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			return tox_save(this.messengerPointer);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_load
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param data
+	 *            a byte array containing the data to load
+	 * @param length
+	 *            the length of the byte array
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_load(long messengerPointer, byte[] data,
+			int length);
+
+	/**
+	 * Load the specified data into this tox instance.
+	 * 
+	 * @param data
+	 *            a byte array containing the data to load
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred while
+	 *             loading
+	 */
+	public void load(byte[] data) throws ToxException {
+		lock.lock();
+		try {
+			if (!isValidPointer(this.messengerPointer)) {
+				throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+			}
+
+			if (tox_load(this.messengerPointer, data, data.length)) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
 		} finally {
 			lock.unlock();
 		}
