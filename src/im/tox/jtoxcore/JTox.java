@@ -59,7 +59,6 @@ public class JTox {
 	public static final int TOX_MAX_NICKNAME_LENGTH = 128;
 
 	static {
-		System.loadLibrary("sodium");
 		System.loadLibrary("jtox");
 	}
 
