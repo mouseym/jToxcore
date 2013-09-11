@@ -144,9 +144,8 @@ public class JTox {
 	/**
 	 * Creates a new instance of JTox and stores the pointer to the internal
 	 * struct in messengerPointer. Also attempts to load the specified byte
-	 * array into this instance
+	 * array into this instance.
 	 * 
-	 * @return a new JTox instance backed by the specified data array
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
