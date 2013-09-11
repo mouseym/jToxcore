@@ -35,7 +35,7 @@ public abstract class OnUserStatusCallback {
 	 * 
 	 * @param friendnumber
 	 *            the friend who changed their status
-	 * @param newstatus
+	 * @param userstatus
 	 *            the new status message
 	 */
 	public abstract void execute(int friendnumber, ToxUserStatus userstatus);
