@@ -2,7 +2,7 @@ TODO
 ========
 
 ## Core functionality ##
-- All done!
+- Wrapper for friend list function
 
 ## API Redesign ##
 
