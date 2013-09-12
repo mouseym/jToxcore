@@ -32,8 +32,10 @@ import im.tox.jtoxcore.callbacks.OnUserStatusCallback;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -63,45 +65,45 @@ public class JTox {
 	}
 
 	/**
-	 * This field contains the lock used for thread safety
-	 */
-	protected final ReentrantLock lock;
-
-	/**
 	 * Map containing associations between pointers and Locks. This is used for
-	 * acquiring the correct lock, as well as checking whether a pointer is
-	 * still valid
+	 * acquiring the correct lock for the current instance
 	 */
-	private static Map<Long, ReentrantLock> validPointers = Collections
+	private static Map<Long, ReentrantLock> locks = Collections
 			.synchronizedMap(new HashMap<Long, ReentrantLock>());
 
 	/**
-	 * This field contains the pointer used in all native tox_ method calls.
+	 * Map containting associations between pointers and Lists of Friends. This
+	 * is used to keep track of friends per tox instance
 	 */
-	protected final long messengerPointer;
+	private static Map<Long, List<ToxFriend>> friends = Collections
+			.synchronizedMap(new HashMap<Long, List<ToxFriend>>());
 
 	/**
-	 * Checks whether the given pointer points to a valid tox instance
-	 * 
-	 * @param messengerPointer
-	 *            the pointer to check
-	 * @return true if valid, false otherwise
+	 * List containing all currently active tox instances
 	 */
-	protected final boolean isValidPointer(long messengerPointer) {
-		return validPointers.containsKey(messengerPointer);
-	}
+	private static List<Long> validPointers;
 
 	/**
-	 * Grab a Lock for the current tox instance. This does NOT acquire the lock,
-	 * it only returns a reference to it, so it can be used
+	 * Grab a Lock for the current tox instance. Use this method if you need to
+	 * synchronize on the same lock that is also used by this tox instance.
 	 * 
 	 * @param messengerPointer
 	 *            the pointer to acquire a lock for
 	 * @return the lock for the specified pointer
 	 */
-	protected static final ReentrantLock getLock(long messengerPointer) {
-		return validPointers.get(messengerPointer);
+	public static final ReentrantLock getLock(long messengerPointer) {
+		return locks.get(messengerPointer);
 	}
+
+	/**
+	 * This field contains the lock used for thread safety
+	 */
+	protected final ReentrantLock lock;
+
+	/**
+	 * This field contains the pointer used in all native tox_ method calls.
+	 */
+	protected final long messengerPointer;
 
 	/**
 	 * Utility method that checks the current pointer and throws an exception if
@@ -110,8 +112,8 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	private void checkPointer() throws ToxException {
-		if (!isValidPointer(this.messengerPointer)) {
+	protected final void checkPointer() throws ToxException {
+		if (!validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
 	}
@@ -137,7 +139,9 @@ public class JTox {
 		} else {
 			this.messengerPointer = pointer;
 			this.lock = new ReentrantLock();
-			validPointers.put(pointer, this.lock);
+			validPointers.add(pointer);
+			locks.put(pointer, this.lock);
+			friends.put(pointer, new ArrayList<ToxFriend>());
 		}
 	}
 
@@ -177,26 +181,27 @@ public class JTox {
 	 *            the address of the friend you want to add
 	 * @param data
 	 *            an optional message you want to send to your friend
-	 * @return the local number of the friend in your list
+	 * @return a new ToxFriend instance for the added friend
 	 * @throws ToxException
 	 *             if the instance has been killed or an error code is returned
 	 *             by the native tox_addfriend call
 	 */
-	public int addFriend(String address, String data) throws ToxException {
+	public ToxFriend addFriend(String address, String data) throws ToxException {
 		lock.lock();
-		int errcode = -5; // Default errcode for unknown error
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend(this.messengerPointer, address, data);
+			int errcode = tox_addfriend(this.messengerPointer, address, data);
+			if (errcode >= 0) {
+				ToxFriend friend = new ToxFriend(errcode, lock);
+				friends.get(this.messengerPointer).add(friend);
+				return friend;
+			} else {
+				throw new ToxException(errcode);
+			}
+
 		} finally {
 			lock.unlock();
-		}
-
-		if (errcode >= 0) {
-			return errcode;
-		} else {
-			throw new ToxException(errcode);
 		}
 	}
 
@@ -224,22 +229,21 @@ public class JTox {
 	 *             the friend
 	 */
 	public int confirmRequest(String address) throws ToxException {
-
 		lock.lock();
-		int errcode = -5; // Default errcode for unknown error
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend_norequest(this.messengerPointer, address);
+			int errcode = tox_addfriend_norequest(this.messengerPointer,
+					address);
+			if (errcode >= 0) {
+				return errcode;
+			} else {
+				throw new ToxException(errcode);
+			}
 		} finally {
 			lock.unlock();
 		}
 
-		if (errcode >= 0) {
-			return errcode;
-		} else {
-			throw new ToxException(errcode);
-		}
 	}
 
 	/**
@@ -300,22 +304,20 @@ public class JTox {
 	 *             if the instance has been killed or the friend does not exist
 	 */
 	public int getFriendId(String clientid) throws ToxException {
-
 		lock.lock();
-		int errcode = -1;
 		try {
 			checkPointer();
 
-			errcode = tox_getfriend_id(this.messengerPointer, clientid);
+			int errcode = tox_getfriend_id(this.messengerPointer, clientid);
+			if (errcode == -1) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			} else {
+				return errcode;
+			}
 		} finally {
 			lock.unlock();
 		}
 
-		if (errcode == -1) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return errcode;
-		}
 	}
 
 	/**
@@ -331,23 +333,24 @@ public class JTox {
 			int friendnumber);
 
 	/**
-	 * Get the client id for a given friendnumber
+	 * Get the client id for a given Friend, and update that friends friend ID
+	 * to the returned value
 	 * 
-	 * @param friendnumber
-	 *            the number of the friend
+	 * @param friend
+	 *            the friend to update the ID for
 	 * @return client id for the given friend
 	 * @throws ToxException
 	 *             if the instance has been killed, or an error occurred when
 	 *             attempting to fetch the client id
 	 */
-	public String getClientId(int friendnumber) throws ToxException {
-
+	public String getClientId(ToxFriend friend) throws ToxException {
 		lock.lock();
 		String result;
 		try {
 			checkPointer();
 
-			result = tox_getclient_id(this.messengerPointer, friendnumber);
+			result = tox_getclient_id(this.messengerPointer,
+					friend.getFriendnumber());
 		} finally {
 			lock.unlock();
 		}
@@ -355,6 +358,7 @@ public class JTox {
 		if (result == null || result.equals("")) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
+			friend.setId(result);
 			return result;
 		}
 	}
@@ -376,7 +380,6 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public void doTox() throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -414,7 +417,6 @@ public class JTox {
 	 */
 	public void bootstrap(InetSocketAddress address, String pubkey)
 			throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -442,7 +444,6 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public boolean isConnected() throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -481,7 +482,6 @@ public class JTox {
 	 */
 	public void setOnFriendRequestCallback(OnFriendRequestCallback callback)
 			throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -510,12 +510,12 @@ public class JTox {
 	 *             in case the instance has already been killed
 	 */
 	public void killTox() throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
+			locks.remove(this.messengerPointer);
+			friends.remove(this.messengerPointer);
 			validPointers.remove(this.messengerPointer);
-
 			tox_kill(this.messengerPointer);
 		} finally {
 			lock.unlock();
@@ -545,7 +545,6 @@ public class JTox {
 	 */
 	public void setOnMessageCallback(OnMessageCallback callback)
 			throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -579,7 +578,6 @@ public class JTox {
 	 */
 	public void setOnActionCallback(OnActionCallback callback)
 			throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -613,7 +611,6 @@ public class JTox {
 	 */
 	public void setOnNameChangeCallback(OnNameChangeCallback callback)
 			throws ToxException {
-
 		lock.lock();
 		try {
 			checkPointer();
@@ -769,18 +766,19 @@ public class JTox {
 	/**
 	 * Method used to delete a friend
 	 * 
-	 * @param friendnumber
-	 *            the number of the friend
+	 * @param friend
+	 *            the friend to delete
 	 * @throws ToxException
-	 *             if the instance has been killed or an error occured
+	 *             if the instance has been killed or an error occurred
 	 */
-	public void deleteFriend(int friendnumber) throws ToxException {
+	public void deleteFriend(ToxFriend friend) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
-			if (tox_delfriend(this.messengerPointer, friendnumber)) {
+			if (tox_delfriend(this.messengerPointer, friend.getFriendnumber())) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
+			friends.get(this.messengerPointer).remove(friend);
 		} finally {
 			lock.unlock();
 		}
@@ -803,8 +801,8 @@ public class JTox {
 	/**
 	 * Sends a message to the specified friend
 	 * 
-	 * @param friendnumber
-	 *            the number of the friend
+	 * @param friend
+	 *            the friend
 	 * @param message
 	 *            the message
 	 * @return the message ID of the sent message. If you want to receive read
@@ -812,14 +810,14 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed or the message was not sent
 	 */
-	public int sendMessage(int friendnumber, String message)
+	public int sendMessage(ToxFriend friend, String message)
 			throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
-			int result = tox_sendmessage(this.messengerPointer, friendnumber,
-					message);
+			int result = tox_sendmessage(this.messengerPointer,
+					friend.getFriendnumber(), message);
 			if (result == 0) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			} else {
@@ -849,8 +847,8 @@ public class JTox {
 	/**
 	 * Sends a message to the specified friend, with a specified ID
 	 * 
-	 * @param friendnumber
-	 *            the number of the friend
+	 * @param friend
+	 *            the friend
 	 * @param message
 	 *            the message
 	 * @param messageID
@@ -860,14 +858,14 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed or the message was not sent.
 	 */
-	public int sendMessage(int friendnumber, String message, int messageID)
+	public int sendMessage(ToxFriend friend, String message, int messageID)
 			throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
-			int result = tox_sendmessage(this.messengerPointer, friendnumber,
-					message, messageID);
+			int result = tox_sendmessage(this.messengerPointer,
+					friend.getFriendnumber(), message, messageID);
 
 			if (result == 0) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
@@ -938,19 +936,20 @@ public class JTox {
 	/**
 	 * Sends an IRC-like /me-action to a friend
 	 * 
-	 * @param friendnumber
-	 *            the number of the friend
+	 * @param friend
+	 *            the friend
 	 * @param action
 	 *            the action
 	 * @throws ToxException
 	 *             if the instance has been killed or the send failed
 	 */
-	public void sendAction(int friendnumber, String action) throws ToxException {
+	public void sendAction(ToxFriend friend, String action) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
-			if (tox_sendaction(this.messengerPointer, friendnumber, action)) {
+			if (tox_sendaction(this.messengerPointer, friend.getFriendnumber(),
+					action)) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			}
 		} finally {
@@ -1048,21 +1047,23 @@ public class JTox {
 	/**
 	 * Get the specified friend's name
 	 * 
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @return the friend's name
 	 * @throws ToxException
 	 *             if the instance has been killed or an error occurred
 	 */
-	public String getName(int friendnumber) throws ToxException {
+	public String getName(ToxFriend friend) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
-			String name = tox_getname(this.messengerPointer, friendnumber);
+			String name = tox_getname(this.messengerPointer,
+					friend.getFriendnumber());
 			if (name == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
+			friend.setName(name);
 			return name;
 		} finally {
 			lock.unlock();
@@ -1107,7 +1108,7 @@ public class JTox {
 	 * 
 	 * @param messengerPointer
 	 * @param friendnumber
-	 * @return
+	 * @return the status message
 	 */
 	private native String tox_getstatusmessage(long messengerPointer,
 			int friendnumber);
@@ -1115,23 +1116,24 @@ public class JTox {
 	/**
 	 * Get the friend's status message
 	 * 
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @return the friend's status message
 	 * @throws ToxException
 	 *             if the instance has been killed, or an error occurred while
 	 *             getting the status message
 	 */
-	public String getStatusMessage(int friendnumber) throws ToxException {
+	public String getStatusMessage(ToxFriend friend) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
 			String status = tox_getstatusmessage(this.messengerPointer,
-					friendnumber);
+					friend.getFriendnumber());
 			if (status == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			} else {
+				friend.setStatusMessage(status);
 				return status;
 			}
 		} finally {
@@ -1154,17 +1156,18 @@ public class JTox {
 	/**
 	 * Check if the specified friend exists
 	 * 
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @return true if friend exists, false otherwise
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	public boolean friendExists(int friendnumber) throws ToxException {
+	public boolean friendExists(ToxFriend friend) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
-			return tox_friendexists(this.messengerPointer, friendnumber);
+			return tox_friendexists(this.messengerPointer,
+					friend.getFriendnumber());
 		} finally {
 			lock.unlock();
 		}
@@ -1217,17 +1220,21 @@ public class JTox {
 	/**
 	 * Get the current status for the specified friend
 	 * 
-	 * @param friendnumber
+	 * @param friend
+	 *            the friend
 	 * @return the friend's status
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	public ToxUserStatus getUserStatus(int friendnumber) throws ToxException {
+	public ToxUserStatus getUserStatus(ToxFriend friend) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
-			return tox_get_userstatus(this.messengerPointer, friendnumber);
+			ToxUserStatus status = tox_get_userstatus(this.messengerPointer,
+					friend.getFriendnumber());
+			friend.setStatus(status);
+			return status;
 		} finally {
 			lock.unlock();
 		}
@@ -1277,19 +1284,20 @@ public class JTox {
 	 * @param sendReceipts
 	 *            <code>true</code> to send receipts, <code>false</code>
 	 *            otherwise
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	public void setSendReceipts(boolean sendReceipts, int friendnumber)
+	public void setSendReceipts(boolean sendReceipts, ToxFriend friend)
 			throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
 
 			tox_set_sends_receipts(this.messengerPointer, sendReceipts,
-					friendnumber);
+					friend.getFriendnumber());
+			friend.setSendReceipts(sendReceipts);
 		} finally {
 			lock.unlock();
 		}

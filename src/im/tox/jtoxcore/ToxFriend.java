@@ -1,10 +1,17 @@
 package im.tox.jtoxcore;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Class representing a friend in Tox. This is a pure data class, it has no
- * logic, and should be used solely as a container. If you need functionality of
- * any kind, extend this class, and pass the subtypes to all methods that
- * require an instance of this class.
+ * logic, and should be used solely as a container.
+ * 
+ * We are keeping a global list of these, so they can be interacted with from
+ * callbacks as well as the main JTox class.
+ * 
+ * All actions on this are synchronized, and the lock will be the same that is
+ * used for the Tox instance that this Friend belongs to, in order to ensure
+ * that we have no race conditions
  * 
  * @author sonOfRa
  * 
@@ -17,52 +24,33 @@ public class ToxFriend {
 	private ToxUserStatus status;
 	private String statusMessage;
 	private boolean sendReceipts;
+	private final ReentrantLock lock;
 
 	/**
-	 * Construct a {@link ToxFriend} with the specified data
+	 * Constructor to be used when adding a new friend
 	 * 
-	 * @param name
-	 *            the name
-	 * @param nickName
-	 *            the nickName
-	 * @param id
-	 *            the id
 	 * @param friendnumber
-	 *            the friendnumber
-	 * @param status
-	 *            the status
-	 * @param statusMessage
-	 *            the statusMessage
-	 * @param sendReceipts
-	 *            whether or not to send receipts
+	 *            the friendnumber for the new friend
+	 * @param ReentrantLock
+	 *            the lock to use
 	 */
-	public ToxFriend(String name, String nickName, String id, int friendnumber,
-			ToxUserStatus status, String statusMessage, boolean sendReceipts) {
-		this.name = name;
-		this.nickName = nickName;
-		this.id = id;
-		this.friendnumber = friendnumber;
-		this.status = status;
-		this.statusMessage = statusMessage;
-		this.sendReceipts = sendReceipts;
-	}
-
-	/**
-	 * Default constructor for a ToxFriend. The default friend number is 0, the
-	 * default value for sending receipts is <code>true</code>, and the default
-	 * status is {@link ToxUserStatus#TOX_USERSTATUS_NONE}
-	 */
-	public ToxFriend() {
+	protected ToxFriend(int friendnumber, ReentrantLock lock) {
 		this.sendReceipts = true;
 		this.status = ToxUserStatus.TOX_USERSTATUS_NONE;
-		this.friendnumber = 0;
+		this.friendnumber = friendnumber;
+		this.lock = lock;
 	}
 
 	/**
 	 * @return the name
 	 */
 	public String getName() {
-		return name;
+		lock.lock();
+		try {
+			return name;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -70,14 +58,24 @@ public class ToxFriend {
 	 *            the name to set
 	 */
 	public void setName(String name) {
-		this.name = name;
+		lock.lock();
+		try {
+			this.name = name;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the nickName
 	 */
 	public String getNickName() {
-		return nickName;
+		lock.lock();
+		try {
+			return nickName;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -85,14 +83,24 @@ public class ToxFriend {
 	 *            the nickName to set
 	 */
 	public void setNickName(String nickName) {
-		this.nickName = nickName;
+		lock.lock();
+		try {
+			this.nickName = nickName;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the id
 	 */
 	public String getId() {
-		return id;
+		lock.lock();
+		try {
+			return id;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -100,14 +108,24 @@ public class ToxFriend {
 	 *            the id to set
 	 */
 	public void setId(String id) {
-		this.id = id;
+		lock.lock();
+		try {
+			this.id = id;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the friendnumber
 	 */
 	public int getFriendnumber() {
-		return friendnumber;
+		lock.lock();
+		try {
+			return friendnumber;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -115,14 +133,24 @@ public class ToxFriend {
 	 *            the friendnumber to set
 	 */
 	public void setFriendnumber(int friendnumber) {
-		this.friendnumber = friendnumber;
+		lock.lock();
+		try {
+			this.friendnumber = friendnumber;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the status
 	 */
 	public ToxUserStatus getStatus() {
-		return status;
+		lock.lock();
+		try {
+			return status;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -130,14 +158,24 @@ public class ToxFriend {
 	 *            the status to set
 	 */
 	public void setStatus(ToxUserStatus status) {
-		this.status = status;
+		lock.lock();
+		try {
+			this.status = status;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the statusMessage
 	 */
 	public String getStatusMessage() {
-		return statusMessage;
+		lock.lock();
+		try {
+			return statusMessage;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -145,14 +183,24 @@ public class ToxFriend {
 	 *            the statusMessage to set
 	 */
 	public void setStatusMessage(String statusMessage) {
-		this.statusMessage = statusMessage;
+		lock.lock();
+		try {
+			this.statusMessage = statusMessage;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * @return the sendReceipts
 	 */
 	public boolean isSendReceipts() {
-		return sendReceipts;
+		lock.lock();
+		try {
+			return sendReceipts;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -160,6 +208,18 @@ public class ToxFriend {
 	 *            the sendReceipts to set
 	 */
 	public void setSendReceipts(boolean sendReceipts) {
-		this.sendReceipts = sendReceipts;
+		lock.lock();
+		try {
+			this.sendReceipts = sendReceipts;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * @return the lock
+	 */
+	public ReentrantLock getLock() {
+		return lock;
 	}
 }
