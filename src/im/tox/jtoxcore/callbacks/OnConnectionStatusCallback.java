@@ -20,22 +20,35 @@
  */
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.JTox;
+import im.tox.jtoxcore.ToxFriend;
+
 /**
  * Callback class for receiving connection status changes from friends
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnConnectionStatusCallback {
+public abstract class OnConnectionStatusCallback extends ToxCallback {
 
 	/**
-	 * Method to be exeuted each time a connection status is received
+	 * Default constructor for {@link OnConnectionStatusCallback}
 	 * 
-	 * @param friendnumber
+	 * @param jtox
+	 *            the {@link JTox} instance to use for this callback
+	 */
+	public OnConnectionStatusCallback(JTox jtox) {
+		super(jtox);
+	}
+
+	/**
+	 * Method to be executed each time a connection status is received
+	 * 
+	 * @param friend
 	 *            the friend who's status changed
 	 * @param online
 	 *            true if the friend is online after being previously offline,
 	 *            false otherwise
 	 */
-	public abstract void execute(int friendnumber, boolean online);
+	public abstract void execute(ToxFriend friend, boolean online);
 }

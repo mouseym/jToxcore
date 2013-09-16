@@ -21,23 +21,36 @@
 
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.JTox;
+import im.tox.jtoxcore.ToxFriend;
+
 /**
  * Callback class for receiving read receipts
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnReadReceiptCallback {
+public abstract class OnReadReceiptCallback extends ToxCallback {
+
+	/**
+	 * Default constructor for {@link OnReadReceiptCallback}
+	 * 
+	 * @param jtox
+	 *            the {@link JTox} instance to use for this callback
+	 */
+	public OnReadReceiptCallback(JTox jtox) {
+		super(jtox);
+	}
 
 	/**
 	 * Method to be executed each time a read receipt is received
 	 * 
-	 * @param friendnumber
+	 * @param friend
 	 *            the friend who sent the receipt
 	 * @param receipt
 	 *            number of the receipt. This is one of the numbers returned
 	 *            when sending messages, so you will need to keep track of those
 	 *            in order to use this functionality.
 	 */
-	public abstract void execute(int friendnumber, int receipt);
+	public abstract void execute(ToxFriend friend, int receipt);
 }

@@ -25,15 +25,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Class representing a friend in Tox. This is a pure data class, it has no
- * logic, and should be used solely as a container.
- * 
+ * logic, and should be used solely as a container. <br>
  * We are keeping a global list of these, so they can be interacted with from
- * callbacks as well as the main JTox class.
- * 
+ * callbacks as well as the main JTox class. <br>
  * All actions on this are synchronized, and the lock will be the same that is
  * used for the Tox instance that this Friend belongs to, in order to ensure
- * that we have no race conditions
- * 
+ * that we have no race conditions <br>
  * Important notice when using this class: The ultimate authority on the data in
  * this class is ALWAYS the core. The setters are public, so you can change the
  * Friend instances that may given to you as a parameter in callbacks to reflect

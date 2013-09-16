@@ -81,7 +81,8 @@ public class JTox {
 	/**
 	 * List containing all currently active tox instances
 	 */
-	private static List<Long> validPointers;
+	private static List<Long> validPointers = Collections
+			.synchronizedList(new ArrayList<Long>());
 
 	/**
 	 * Grab a Lock for the current tox instance. Use this method if you need to
@@ -216,19 +217,19 @@ public class JTox {
 	 */
 	private native int tox_addfriend_norequest(long messengerPointer,
 			String address);
-
+	
 	/**
 	 * Confirm a friend request, or add a friend to your own list without
 	 * sending them a friend request
 	 * 
 	 * @param address
 	 *            address of the friend to add
-	 * @return the local number of the friend in your list
+	 * @return the friend
 	 * @throws ToxException
 	 *             if the instance was killed or an error occurred when adding
 	 *             the friend
 	 */
-	public int confirmRequest(String address) throws ToxException {
+	public ToxFriend confirmRequest(String address) throws ToxException {
 		lock.lock();
 		try {
 			checkPointer();
@@ -236,7 +237,9 @@ public class JTox {
 			int errcode = tox_addfriend_norequest(this.messengerPointer,
 					address);
 			if (errcode >= 0) {
-				return errcode;
+				ToxFriend friend = new ToxFriend(errcode, lock);
+				friends.get(this.messengerPointer).add(friend);
+				return friend;
 			} else {
 				throw new ToxException(errcode);
 			}
@@ -1365,5 +1368,21 @@ public class JTox {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	/**
+	 * Get a friend for the specified friendnumber in the current tox instance
+	 * 
+	 * @param friendnumber
+	 *            the number of the friend to find
+	 * @return the Friend if found. <code>null</code> otherwise.
+	 */
+	private ToxFriend getFriendByNumber(int friendnumber) {
+		for (ToxFriend friend : friends.get(this.messengerPointer)) {
+			if (friend.getFriendnumber() == friendnumber) {
+				return friend;
+			}
+		}
+		return null;
 	}
 }

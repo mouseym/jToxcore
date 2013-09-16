@@ -20,13 +20,25 @@
  */
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.JTox;
+
 /**
  * Callback class for receiving friend requests
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnFriendRequestCallback {
+public abstract class OnFriendRequestCallback extends ToxCallback {
+
+	/**
+	 * Default constructor for {@link OnFriendRequestCallback}
+	 * 
+	 * @param jtox
+	 *            the {@link JTox} instance to use for this callback
+	 */
+	public OnFriendRequestCallback(JTox jtox) {
+		super(jtox);
+	}
 
 	/**
 	 * Method to be executed each time a friend request is received

@@ -1,4 +1,4 @@
-/* OnUserStatusCallback.java
+/* ToxCallback.java
  *
  *  Copyright (C) 2013 Tox project All Rights Reserved.
  *
@@ -21,34 +21,28 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
-import im.tox.jtoxcore.ToxUserStatus;
 
 /**
- * Callback for receiving user status changes
+ * Superclass for all Tox callbacks. This defines that all Callbacks should have
+ * a {@link JTox} instance so they can interact with the core data.
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnUserStatusCallback extends ToxCallback {
+public abstract class ToxCallback {
 
 	/**
-	 * Default constructor for {@link OnUserStatusCallback}
+	 * JTox instance associated with this callback
+	 */
+	protected final JTox jtox;
+
+	/**
+	 * Default constructor for Tox Callbacks.
 	 * 
 	 * @param jtox
 	 *            the {@link JTox} instance to use for this callback
 	 */
-	public OnUserStatusCallback(JTox jtox) {
-		super(jtox);
+	public ToxCallback(JTox jtox) {
+		this.jtox = jtox;
 	}
-
-	/**
-	 * Method to be executed each time a friend changes their status message
-	 * 
-	 * @param friend
-	 *            the friend who changed their status
-	 * @param userstatus
-	 *            the new status message
-	 */
-	public abstract void execute(ToxFriend friend, ToxUserStatus userstatus);
 }
