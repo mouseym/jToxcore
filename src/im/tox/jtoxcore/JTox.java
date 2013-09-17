@@ -31,7 +31,7 @@ import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
 import im.tox.jtoxcore.callbacks.OnUserStatusCallback;
 
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -172,8 +172,8 @@ public class JTox {
 	 *            length of the message sent to friend
 	 * @return friend number on success, error code on failure
 	 */
-	private native int tox_addfriend(long messengerPointer, String address,
-			String data);
+	private native int tox_addfriend(long messengerPointer, byte[] address,
+			byte[] data);
 
 	/**
 	 * Use this method to add a friend.
@@ -188,11 +188,14 @@ public class JTox {
 	 *             by the native tox_addfriend call
 	 */
 	public ToxFriend addFriend(String address, String data) throws ToxException {
+		byte[] addressArray = getStringBytes(address);
+		byte[] dataArray = getStringBytes(data);
 		lock.lock();
 		try {
 			checkPointer();
 
-			int errcode = tox_addfriend(this.messengerPointer, address, data);
+			int errcode = tox_addfriend(this.messengerPointer, addressArray,
+					dataArray);
 			if (errcode >= 0) {
 				ToxFriend friend = new ToxFriend(errcode, lock);
 				friends.get(this.messengerPointer).add(friend);
@@ -217,7 +220,7 @@ public class JTox {
 	 */
 	private native int tox_addfriend_norequest(long messengerPointer,
 			String address);
-	
+
 	/**
 	 * Confirm a friend request, or add a friend to your own list without
 	 * sending them a friend request
@@ -405,27 +408,39 @@ public class JTox {
 	 * @param pubkey
 	 *            public key of the bootstrap node
 	 */
-	private native void tox_bootstrap(long messengerPointer, byte[] ip,
+	private native int tox_bootstrap(long messengerPointer, String ip,
 			int port, String pubkey);
 
 	/**
 	 * Method used to bootstrap the client's connection.
 	 * 
-	 * @param address
-	 *            A IP-port pair to connect to
+	 * @param host
+	 *            Hostname or IP(v4, v6) address to connect to. If the hostname
+	 *            contains non-ASCII characters, convert it to punycode when
+	 *            calling this method.
+	 * @param port
+	 *            port to connect to
 	 * @param pubkey
 	 *            public key of the bootstrap node
 	 * @throws ToxException
-	 *             if the instance has been killed
+	 *             if the instance has been killed or an invalid port was
+	 *             specified
+	 * @throws UnknownHostException
+	 *             if the host could not be resolved or the IP address was
+	 *             invalid
 	 */
-	public void bootstrap(InetSocketAddress address, String pubkey)
-			throws ToxException {
+	public void bootstrap(String host, int port, String pubkey)
+			throws ToxException, UnknownHostException {
+		if (port < 0 || port > 65535) {
+			throw new ToxException(ToxError.TOX_INVALID_PORT);
+		}
 		lock.lock();
 		try {
 			checkPointer();
+			if (tox_bootstrap(this.messengerPointer, host, port, pubkey) == 0) {
+				throw new UnknownHostException(host);
+			}
 
-			tox_bootstrap(messengerPointer, address.getAddress().getAddress(),
-					address.getPort(), pubkey);
 		} finally {
 			lock.unlock();
 		}
@@ -1384,5 +1399,25 @@ public class JTox {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
+	 * a nullbyte at the end for convenience
+	 * 
+	 * @param in
+	 *            the String to convert
+	 * @return a byte array
+	 * @throws ToxException
+	 *             if the UTF-8 encoding is not supported
+	 */
+	private static byte[] getStringBytes(String in) throws ToxException {
+		try {
+			return in.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+			e1.initCause(e);
+			throw e1;
+		}
 	}
 }

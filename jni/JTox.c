@@ -58,7 +58,7 @@ void hex_to_addr(const char *hex, uint8_t *buf) {
 		sscanf(pos, "%2hhx", &buf[i]);
 	}
 
-	for(i = 0; i < len; ++i) {
+	for (i = 0; i < len; ++i) {
 		pos -= 2;
 	}
 	free(pos);
@@ -82,7 +82,7 @@ void nullterminate(uint8_t *in, uint16_t length, char *out) {
 JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
 		jclass clazz) {
 	tox_jni_globals_t *globals = malloc(sizeof(tox_jni_globals_t));
-	globals->tox = tox_new();
+	globals->tox = tox_new(1);
 	globals->frqc = 0;
 	globals->frmc = 0;
 	globals->ac = 0;
@@ -94,30 +94,21 @@ JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
 	return ((jlong) globals);
 }
 
-JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap(JNIEnv * env,
-		jobject obj, jlong messenger, jbyteArray ip, jint port, jstring address) {
-	tox_IP_Port ipport;
-	tox_IP _ip;
-
-	jbyte *ip_array = (*env)->GetByteArrayElements(env, ip, 0);
-	jsize n = (*env)->GetArrayLength(env, ip);
-	int i;
-
-	for (i = 0; i < n; ++i) {
-		_ip.c[i] = ip_array[i];
-	}
-
-	(*env)->ReleaseByteArrayElements(env, ip, ip_array, 0);
-	ipport.ip = _ip;
-	ipport.port = htons((uint16_t) port);
-
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap(JNIEnv * env,
+		jobject obj, jlong messenger, jstring ip, jint port, jstring address) {
+	const char *_ip = (*env)->GetStringUTFChars(env, ip, 0);
 	const char *_address = (*env)->GetStringUTFChars(env, address, 0);
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
+	uint8_t *__address = malloc(strlen(_address) + 1);
 	hex_to_addr(_address, __address);
-
-	tox_bootstrap(((tox_jni_globals_t *) messenger)->tox, ipport, __address);
-
 	(*env)->ReleaseStringUTFChars(env, address, _address);
+	uint16_t _port = htons((uint16_t) port);
+
+	jint result = tox_bootstrap_from_address(
+			((tox_jni_globals_t *) messenger)->tox, _ip, 1, _port, __address);
+
+	(*env)->ReleaseStringUTFChars(env, ip, _ip);
+
+	return result;
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1do(JNIEnv * env,
