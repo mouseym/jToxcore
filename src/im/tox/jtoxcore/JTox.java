@@ -1238,8 +1238,7 @@ public class JTox {
 		try {
 			checkPointer();
 
-			return tox_get_userstatus(this.messengerPointer,
-					friendnumber);
+			return tox_get_userstatus(this.messengerPointer, friendnumber);
 		} finally {
 			lock.unlock();
 		}
