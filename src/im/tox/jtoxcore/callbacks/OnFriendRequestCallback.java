@@ -20,13 +20,25 @@
  */
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.JTox;
+
 /**
  * Callback class for receiving friend requests
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnFriendRequestCallback {
+public abstract class OnFriendRequestCallback extends ToxCallback {
+
+	/**
+	 * Default constructor for {@link OnFriendRequestCallback}
+	 * 
+	 * @param jtox
+	 *            the {@link JTox} instance to use for this callback
+	 */
+	public OnFriendRequestCallback(JTox jtox) {
+		super(jtox);
+	}
 
 	/**
 	 * Method to be executed each time a friend request is received
@@ -37,5 +49,5 @@ public abstract class OnFriendRequestCallback {
 	 *            an optional message sent with the friend request. Might be
 	 *            <code>null</code>, so you need to check for this
 	 */
-	public abstract void execute(String publicKey, String message);
+	public abstract void execute(String publicKey, byte[] message);
 }

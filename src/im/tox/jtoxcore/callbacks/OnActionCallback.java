@@ -20,13 +20,25 @@
  */
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.JTox;
+
 /**
  * Callback class for receiving actions from friends
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnActionCallback {
+public abstract class OnActionCallback extends ToxCallback {
+
+	/**
+	 * Default constructor for {@link OnActionCallback}
+	 * 
+	 * @param jtox
+	 *            the {@link JTox} instance to use for this callback
+	 */
+	public OnActionCallback(JTox jtox) {
+		super(jtox);
+	}
 
 	/**
 	 * Method to be executed each time an action is received
@@ -36,5 +48,5 @@ public abstract class OnActionCallback {
 	 * @param action
 	 *            content of the action
 	 */
-	public abstract void execute(int friendnumber, String action);
+	public abstract void execute(int friendnumber, byte[] action);
 }
