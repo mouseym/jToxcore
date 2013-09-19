@@ -48,5 +48,5 @@ public abstract class OnMessageCallback extends ToxCallback {
 	 * @param message
 	 *            the message
 	 */
-	public abstract void execute(int friendnumber, String message);
+	public abstract void execute(int friendnumber, byte[] message);
 }

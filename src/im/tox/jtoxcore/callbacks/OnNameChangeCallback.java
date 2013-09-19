@@ -48,5 +48,5 @@ public abstract class OnNameChangeCallback extends ToxCallback {
 	 * @param newname
 	 *            the new name
 	 */
-	public abstract void execute(int friendnumber, String newname);
+	public abstract void execute(int friendnumber, byte[] newname);
 }

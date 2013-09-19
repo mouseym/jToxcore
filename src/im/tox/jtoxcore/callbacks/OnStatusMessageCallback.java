@@ -48,5 +48,5 @@ public abstract class OnStatusMessageCallback extends ToxCallback {
 	 * @param newstatus
 	 *            the new status message
 	 */
-	public abstract void execute(int friendnumber, String newstatus);
+	public abstract void execute(int friendnumber, byte[] newstatus);
 }

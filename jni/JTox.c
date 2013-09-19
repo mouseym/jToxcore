@@ -516,18 +516,16 @@ static void callback_friendrequest(uint8_t *pubkey, uint8_t *message,
 	friendrequest_callback_t *data = ptr;
 	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
 	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
-			"(Ljava/lang/String;Ljava/lang/String;)V");
+			"(Ljava/lang/String;[B)V");
 
 	char buf[ADDR_SIZE_HEX] = { 0 };
 	addr_to_hex(pubkey, buf);
-	char *_message = malloc(length + 1);
-	nullterminate(message, length, _message);
 	jstring _pubkey = (*data->env)->NewStringUTF(data->env, buf);
-	jstring __message = (*data->env)->NewStringUTF(data->env, _message);
-	free(_message);
+	jbyteArray _message = (*data->env)->NewByteArray(data->env, length);
+	(*data->env)->SetByteArrayRegion(data->env, _message, 0, length, message);
 
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, _pubkey,
-			__message);
+			_message);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onfriendmessage(
@@ -554,14 +552,12 @@ static void callback_friendmessage(Tox * tox, int friendnumber,
 	friendmessage_callback_t *data = ptr;
 	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
 	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
-			"(ILjava/lang/String;)V");
+			"(I[B)V");
 
-	char *_message = malloc(length + 1);
-	nullterminate(message, length, _message);
-	jstring __message = (*data->env)->NewStringUTF(data->env, _message);
-	free(_message);
+	jbyteArray _message = (*data->env)->NewByteArray(data->env, length);
+	(*data->env)->SetByteArrayRegion(data->env, _message, 0, length, message);
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
-			__message);
+			_message);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onaction(JNIEnv * env,
@@ -587,14 +583,12 @@ static void callback_action(Tox * tox, int friendnumber, uint8_t *action,
 	action_callback_t *data = ptr;
 	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
 	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
-			"(ILjava/lang/String;)V");
+			"(I[B)V");
 
-	char *_action = malloc(length + 1);
-	nullterminate(action, length, _action);
-	jstring __action = (*data->env)->NewStringUTF(data->env, _action);
-	free(_action);
+	jbyteArray _action = (*data->env)->NewByteArray(data->env, length);
+	(*data->env)->SetByteArrayRegion(data->env, _action, 0, length, action);
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
-			__action);
+			_action);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onnamechange(JNIEnv * env,
@@ -621,14 +615,12 @@ static void callback_namechange(Tox * tox, int friendnumber, uint8_t *newname,
 	namechange_callback_t *data = ptr;
 	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
 	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
-			"(ILjava/lang/String;)V");
+			"(I[B)V");
 
-	char *_newname = malloc(length + 1);
-	nullterminate(newname, length, _newname);
-	jstring __newname = (*data->env)->NewStringUTF(data->env, _newname);
-	free(_newname);
+	jbyteArray _newname = (*data->env)->NewByteArray(data->env, length);
+	(*data->env)->SetByteArrayRegion(data->env, _newname, 0, length, newname);
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
-			__newname);
+			_newname);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1onstatusmessage(
@@ -655,14 +647,13 @@ static void callback_statusmessage(Tox *tox, int friendnumber,
 	statusmessage_callback_t *data = ptr;
 	jclass class = (*data->env)->GetObjectClass(data->env, data->jobj);
 	jmethodID meth = (*data->env)->GetMethodID(data->env, class, "execute",
-			"(ILjava/lang/String;)V");
+			"(I[B)V");
 
-	char *_newstatus = malloc(length + 1);
-	nullterminate(newstatus, length, _newstatus);
-	jstring __newstatus = (*data->env)->NewStringUTF(data->env, _newstatus);
-	free(_newstatus);
+	jbyteArray _newstatus = (*data->env)->NewByteArray(data->env, length);
+	(*data->env)->SetByteArrayRegion(data->env, _newstatus, 0, length,
+			newstatus);
 	(*data->env)->CallVoidMethod(data->env, data->jobj, meth, friendnumber,
-			__newstatus);
+			_newstatus);
 }
 
 JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1on_1userstatus(

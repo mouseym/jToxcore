@@ -1381,7 +1381,7 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the UTF-8 encoding is not supported
 	 */
-	private static byte[] getStringBytes(String in) throws ToxException {
+	public static byte[] getStringBytes(String in) throws ToxException {
 		try {
 			return in.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException e) {
@@ -1391,7 +1391,7 @@ public class JTox {
 		}
 	}
 
-	private static String getByteString(byte[] in) throws ToxException {
+	public static String getByteString(byte[] in) throws ToxException {
 		try {
 			return new String(in, "UTF-8");
 		} catch (UnsupportedEncodingException e) {

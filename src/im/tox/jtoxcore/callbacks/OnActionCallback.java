@@ -48,5 +48,5 @@ public abstract class OnActionCallback extends ToxCallback {
 	 * @param action
 	 *            content of the action
 	 */
-	public abstract void execute(int friendnumber, String action);
+	public abstract void execute(int friendnumber, byte[] action);
 }

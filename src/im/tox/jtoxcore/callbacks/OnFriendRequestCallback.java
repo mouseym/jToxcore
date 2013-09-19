@@ -49,5 +49,5 @@ public abstract class OnFriendRequestCallback extends ToxCallback {
 	 *            an optional message sent with the friend request. Might be
 	 *            <code>null</code>, so you need to check for this
 	 */
-	public abstract void execute(String publicKey, String message);
+	public abstract void execute(String publicKey, byte[] message);
 }
