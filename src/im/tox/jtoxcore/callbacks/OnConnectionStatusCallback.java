@@ -21,7 +21,6 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
 
 /**
  * Callback class for receiving connection status changes from friends
@@ -44,11 +43,11 @@ public abstract class OnConnectionStatusCallback extends ToxCallback {
 	/**
 	 * Method to be executed each time a connection status is received
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the friend who's status changed
 	 * @param online
 	 *            true if the friend is online after being previously offline,
 	 *            false otherwise
 	 */
-	public abstract void execute(ToxFriend friend, boolean online);
+	public abstract void execute(int friendnumber, boolean online);
 }

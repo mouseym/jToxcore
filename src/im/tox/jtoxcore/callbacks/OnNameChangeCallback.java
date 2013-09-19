@@ -21,7 +21,6 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
 
 /**
  * Callback class for receiving name changes
@@ -44,10 +43,10 @@ public abstract class OnNameChangeCallback extends ToxCallback {
 	/**
 	 * Method to be executed each time a name change is received from a friend
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the friend
 	 * @param newname
 	 *            the new name
 	 */
-	public abstract void execute(ToxFriend friend, String newname);
+	public abstract void execute(int friendnumber, String newname);
 }

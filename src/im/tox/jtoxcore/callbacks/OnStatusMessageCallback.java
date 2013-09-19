@@ -21,7 +21,6 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
 
 /**
  * Callback for receiving status message changes
@@ -44,10 +43,10 @@ public abstract class OnStatusMessageCallback extends ToxCallback {
 	/**
 	 * Method to be executed each time a friend changes their status message
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the friend who changed their status
 	 * @param newstatus
 	 *            the new status message
 	 */
-	public abstract void execute(ToxFriend friend, String newstatus);
+	public abstract void execute(int friendnumber, String newstatus);
 }

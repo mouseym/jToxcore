@@ -21,7 +21,6 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
 
 /**
  * Callback class for receiving actions from friends
@@ -44,10 +43,10 @@ public abstract class OnActionCallback extends ToxCallback {
 	/**
 	 * Method to be executed each time an action is received
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the friend who sent the action
 	 * @param action
 	 *            content of the action
 	 */
-	public abstract void execute(ToxFriend friend, String action);
+	public abstract void execute(int friendnumber, String action);
 }

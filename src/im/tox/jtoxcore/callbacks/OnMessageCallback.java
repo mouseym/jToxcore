@@ -21,7 +21,6 @@
 package im.tox.jtoxcore.callbacks;
 
 import im.tox.jtoxcore.JTox;
-import im.tox.jtoxcore.ToxFriend;
 
 /**
  * Callback class for receiving messages
@@ -44,12 +43,10 @@ public abstract class OnMessageCallback extends ToxCallback {
 	/**
 	 * Method to be executed each time a message is received
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the friend who sent the message
 	 * @param message
 	 *            the message
 	 */
-	public void execute(ToxFriend friend, String message) {
-		System.out.println("HUE");
-	}
+	public abstract void execute(int friendnumber, String message);
 }

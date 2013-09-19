@@ -214,10 +214,10 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1load(JNIEnv *env,
  */
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
-		jobject obj, jlong messenger, jstring address, jbyteArray data) {
+		jobject obj, jlong messenger, jstring address, jbyteArray data,
+		jint length) {
 	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
 	uint8_t *_data = (*env)->GetByteArrayElements(env, data, 0);
-	jsize length = (*env)->GetArrayLength(env, data);
 
 	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
 	hex_to_addr(_address, __address);
