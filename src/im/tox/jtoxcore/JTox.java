@@ -172,7 +172,7 @@ public class JTox {
 	 *            length of the message sent to friend
 	 * @return friend number on success, error code on failure
 	 */
-	private native int tox_addfriend(long messengerPointer, byte[] address,
+	private native int tox_addfriend(long messengerPointer, String address,
 			byte[] data);
 
 	/**
@@ -188,13 +188,12 @@ public class JTox {
 	 *             by the native tox_addfriend call
 	 */
 	public ToxFriend addFriend(String address, String data) throws ToxException {
-		byte[] addressArray = getStringBytes(address);
 		byte[] dataArray = getStringBytes(data);
 		lock.lock();
 		try {
 			checkPointer();
 
-			int errcode = tox_addfriend(this.messengerPointer, addressArray,
+			int errcode = tox_addfriend(this.messengerPointer, address,
 					dataArray);
 			if (errcode >= 0) {
 				ToxFriend friend = new ToxFriend(errcode, lock);
@@ -203,7 +202,6 @@ public class JTox {
 			} else {
 				throw new ToxException(errcode);
 			}
-
 		} finally {
 			lock.unlock();
 		}
@@ -811,10 +809,12 @@ public class JTox {
 	 *            the number of the friend
 	 * @param message
 	 *            the message
+	 * @param length
+	 *            length of the message in bytes
 	 * @return the message ID on success, 0 on failure
 	 */
 	private native int tox_sendmessage(long messengerPointer, int friendnumber,
-			String message);
+			byte[] message, int length);
 
 	/**
 	 * Sends a message to the specified friend
@@ -831,11 +831,12 @@ public class JTox {
 	public int sendMessage(ToxFriend friend, String message)
 			throws ToxException {
 		lock.lock();
+		byte[] messageArray = getStringBytes(message);
 		try {
 			checkPointer();
 
 			int result = tox_sendmessage(this.messengerPointer,
-					friend.getFriendnumber(), message);
+					friend.getFriendnumber(), messageArray, messageArray.length);
 			if (result == 0) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			} else {
@@ -855,12 +856,15 @@ public class JTox {
 	 *            the number of the friend
 	 * @param message
 	 *            the message
+	 * @param length
+	 *            length of the message in bytes
+	 * 
 	 * @param messageID
 	 *            the message ID to use
 	 * @return the message ID on success, 0 on failure
 	 */
 	private native int tox_sendmessage(long messengerPointer, int friendnumber,
-			String message, int messageID);
+			byte[] message, int length, int messageID);
 
 	/**
 	 * Sends a message to the specified friend, with a specified ID
@@ -878,12 +882,14 @@ public class JTox {
 	 */
 	public int sendMessage(ToxFriend friend, String message, int messageID)
 			throws ToxException {
+		byte[] messageArray = getStringBytes(message);
 		lock.lock();
 		try {
 			checkPointer();
 
 			int result = tox_sendmessage(this.messengerPointer,
-					friend.getFriendnumber(), message, messageID);
+					friend.getFriendnumber(), messageArray,
+					messageArray.length, messageID);
 
 			if (result == 0) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
@@ -902,34 +908,35 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @param newname
 	 *            the new name
+	 * @param length
+	 *            length of the new name in byte
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_setname(long messengerPointer, String newname);
+	private native boolean tox_setname(long messengerPointer, byte[] newname,
+			int length);
 
 	/**
 	 * Sets our nickname
 	 * 
 	 * @param newname
-	 *            the new name to set. Maximum length is 127.
+	 *            the new name to set. Maximum length is 128 bytes. This means
+	 *            that a name containing UTF-8 characters has a shorter
+	 *            character limit than one only using ASCII.
 	 * @throws ToxException
 	 *             if the instance was killed, the name was too long, or another
-	 *             error occured
+	 *             error occurred
 	 */
 	public void setName(String newname) throws ToxException {
 		lock.lock();
+		byte[] newnameArray = getStringBytes(newname);
+		if (newnameArray.length >= TOX_MAX_NICKNAME_LENGTH) {
+			throw new ToxException(ToxError.TOX_TOOLONG);
+		}
 		try {
 			checkPointer();
-			try {
-				if (newname.getBytes("UTF-8").length >= TOX_MAX_NICKNAME_LENGTH) {
-					throw new ToxException(ToxError.TOX_TOOLONG);
-				}
-			} catch (UnsupportedEncodingException e) {
-				ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
-				e1.initCause(e);
-				throw e1;
-			}
 
-			if (tox_setname(this.messengerPointer, newname)) {
+			if (tox_setname(this.messengerPointer, newnameArray,
+					newnameArray.length)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
@@ -946,10 +953,12 @@ public class JTox {
 	 *            the number of the friend
 	 * @param action
 	 *            the action to send
+	 * @param length
+	 *            length of the action in bytes
 	 * @return false on success, true on failure
 	 */
 	private native boolean tox_sendaction(long messengerPointer,
-			int friendnumber, String action);
+			int friendnumber, byte[] action, int length);
 
 	/**
 	 * Sends an IRC-like /me-action to a friend
@@ -963,11 +972,12 @@ public class JTox {
 	 */
 	public void sendAction(ToxFriend friend, String action) throws ToxException {
 		lock.lock();
+		byte[] actionArray = getStringBytes(action);
 		try {
 			checkPointer();
 
 			if (tox_sendaction(this.messengerPointer, friend.getFriendnumber(),
-					action)) {
+					actionArray, actionArray.length)) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			}
 		} finally {
@@ -1014,10 +1024,12 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @param message
 	 *            our new status message
+	 * @param length
+	 *            the length of the new status message in bytes
 	 * @return false on success, true on failure
 	 */
 	private native boolean tox_set_statusmessage(long messengerPointer,
-			String message);
+			byte[] message, int length);
 
 	/**
 	 * Sets our status message
@@ -1030,20 +1042,15 @@ public class JTox {
 	 */
 	public void setStatusMessage(String message) throws ToxException {
 		lock.lock();
+		byte[] messageArray = getStringBytes(message);
+		if (messageArray.length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
+			throw new ToxException(ToxError.TOX_TOOLONG);
+		}
 		try {
 			checkPointer();
 
-			try {
-				if (message.getBytes("UTF-8").length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
-					throw new ToxException(ToxError.TOX_TOOLONG);
-				}
-			} catch (UnsupportedEncodingException e) {
-				ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
-				e1.initCause(e);
-				throw e1;
-			}
-
-			if (tox_set_statusmessage(this.messengerPointer, message)) {
+			if (tox_set_statusmessage(this.messengerPointer, messageArray,
+					messageArray.length)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
@@ -1060,7 +1067,7 @@ public class JTox {
 	 *            the friend's number
 	 * @return the specified friend's name
 	 */
-	private native String tox_getname(long messengerPointer, int friendnumber);
+	private native byte[] tox_getname(long messengerPointer, int friendnumber);
 
 	/**
 	 * Get the specified friend's name
@@ -1076,13 +1083,14 @@ public class JTox {
 		try {
 			checkPointer();
 
-			String name = tox_getname(this.messengerPointer,
+			byte[] name = tox_getname(this.messengerPointer,
 					friend.getFriendnumber());
 			if (name == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
-			friend.setName(name);
-			return name;
+			String nameString = getByteString(name);
+			friend.setName(nameString);
+			return nameString;
 		} finally {
 			lock.unlock();
 		}
@@ -1125,10 +1133,12 @@ public class JTox {
 	 * Native call to tox_copy_statusmessage
 	 * 
 	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
 	 * @param friendnumber
+	 *            the friend's number
 	 * @return the status message
 	 */
-	private native String tox_getstatusmessage(long messengerPointer,
+	private native byte[] tox_getstatusmessage(long messengerPointer,
 			int friendnumber);
 
 	/**
@@ -1146,13 +1156,14 @@ public class JTox {
 		try {
 			checkPointer();
 
-			String status = tox_getstatusmessage(this.messengerPointer,
+			byte[] status = tox_getstatusmessage(this.messengerPointer,
 					friend.getFriendnumber());
 			if (status == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			} else {
-				friend.setStatusMessage(status);
-				return status;
+				String statusString = getByteString(status);
+				friend.setStatusMessage(statusString);
+				return statusString;
 			}
 		} finally {
 			lock.unlock();
@@ -1198,7 +1209,7 @@ public class JTox {
 	 *            pointer to the internal messenger struct
 	 * @return our current status message
 	 */
-	private native String tox_getselfstatusmessage(long messengerPointer);
+	private native byte[] tox_getselfstatusmessage(long messengerPointer);
 
 	/**
 	 * Gets our own status message
@@ -1211,12 +1222,13 @@ public class JTox {
 		try {
 			checkPointer();
 
-			String message = tox_getselfstatusmessage(this.messengerPointer);
+			byte[] message = tox_getselfstatusmessage(this.messengerPointer);
 
 			if (message == null) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			} else {
-				return message;
+				String messageString = getByteString(message);
+				return messageString;
 			}
 		} finally {
 			lock.unlock();
@@ -1414,6 +1426,16 @@ public class JTox {
 	private static byte[] getStringBytes(String in) throws ToxException {
 		try {
 			return in.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+			e1.initCause(e);
+			throw e1;
+		}
+	}
+
+	private static String getByteString(byte[] in) throws ToxException {
+		try {
+			return new String(in, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
 			e1.initCause(e);
