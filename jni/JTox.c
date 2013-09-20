@@ -483,6 +483,23 @@ JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1sends_1receipts(
 			send);
 }
 
+JNIEXPORT jintArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friendlist(
+		JNIEnv *env, jobject obj, jlong messenger) {
+	int *list;
+	uint32_t length;
+	int ret = tox_get_friendlist(((tox_jni_globals_t *) messenger)->tox, &list,
+			&length);
+	if (ret == -1) {
+		free(list);
+		return 0;
+	} else {
+		jintArray arr = (*env)->NewIntArray(env, length);
+		(*env)->SetIntArrayRegion(env, arr, 0, length, list);
+		free(list);
+		return arr;
+	}
+}
+
 /**
  * End general section
  */

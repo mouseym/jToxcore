@@ -1396,6 +1396,41 @@ public class JTox {
 	}
 
 	/**
+	 * Native call to tox_get_friendlist
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return array containing valid friend numbers
+	 */
+	private native int[] tox_get_friendlist(long messengerPointer);
+
+	/**
+	 * Get a list of all currently valid friend numbers.
+	 * @return ArrayList containing the 
+	 */
+	public ArrayList<Integer> getFriendList() throws ToxException {
+		lock.lock();
+		int[] ids;
+		try {
+			checkPointer();
+			
+			ids = tox_get_friendlist(this.messengerPointer);
+		} finally {
+			lock.unlock();
+		}
+		
+		if(ids == null) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			ArrayList<Integer> list = new ArrayList<Integer>();
+			for(int i : ids) {
+				list.add(i);
+			}
+			return list;
+		}
+	}
+	
+	/**
 	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
 	 * a nullbyte at the end for convenience
 	 * 
