@@ -7,24 +7,6 @@ Java uses a non-standard UTF-8 encoding. We need to handle byte arrays instead o
 - Wrapper for friend list function
 - Wrap group chat functions from core
 
-## API Redesign (see api-rewrite branch)##
-
-We could wrap the friendnumber, status, statusmessage and such in a dedicated ToxFriend.java class, and pass 
-an instance of that to each method where the friendnumber is required. This would also allow for some easier 
-encapsulation of data for API users, as it gives them a central place to store data for each friend. The 
-friends should be pure data objects with only setters and getters, all methods should remain in the core 
-class.
-
-This is done, the Friend class now is complete.
-
-### Callback changes ###
-Since we replaced "int friendnumber" occurrences with Friend instances in JTox.java, we should also do so in all Callbacks.
-
-- Create an instance method for JTox that returns a ToxFriend from the respective Friend list, (or null).
-- Call this method from the C Code to get our ToxFriend instance which we can then return to the callback on the Java side. This will make things a little more consistent
-- This method can probably be made private, as it will only be used by native code.
-- It could also be done completely on the JNI level, using a plain C function to access the static fields instead.
-
 ## Testing ##
 - Manual testing, maybe a reference client like toxic
 - Unit testing for everything that does not rely heavily on connection state. If we find connections to 
