@@ -1,6 +1,9 @@
 # Ignore binaries
 bin/
 
+# Ignore CMake build dir
+build/
+
 # .cproject contains specific locations on local filesystem
 .cproject
 
