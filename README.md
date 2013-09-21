@@ -31,3 +31,15 @@ so direct any questions on importing this to https://github.com/sonOfRa. Also so
 3. Group native calls with their corresponding public API method (native method directly above API call)
 4. JavaDoc on public methods is mandatory. Adding JavaDoc to non-public methods is highly encouraged.
 5. Do not commit code that only works on Java 7. This API is supposed to work on Android as well, which does not support the full Java 7 specification.
+
+## Building ##
+1. We use CMake as a build system. Currently only the .jar can be built.
+
+```
+git clone https://github.com/Tox/jToxcore
+cd jToxcore
+mkdir build && cd build
+cmake ..
+make
+```
+The .jar file will be in ```build/bin/jToxcore.jar```
