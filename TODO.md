@@ -17,5 +17,4 @@ code is working properly
 - The C Code needs documentation as well
 
 ## Build System ##
-- We're using CMake! Support for building the .jar file is complete, support for 
-building the jToxcore library will be added soon
+- Done!
