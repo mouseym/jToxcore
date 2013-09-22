@@ -1,5 +1,4 @@
 find_package(Java REQUIRED)
-find_package(JNI REQUIRED)
 
 include(UseJava)
 

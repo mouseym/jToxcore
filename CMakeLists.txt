@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 project (jToxcore)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 # Version
 set(JTOXCORE_VERSION 0.2.0)
 
@@ -11,6 +12,9 @@ set(JNI_HEADER_NAME "JTox.h")
 # Target name for .jar
 set(JAR_TARGET_NAME jToxcore)
 
+# Target name for shared library
+set(LIB_TARGET_NAME jtoxcre)
+
 # Subdir for Java code
 add_subdirectory (src)
-
+add_subdirectory (jni)
