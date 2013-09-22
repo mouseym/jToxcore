@@ -13,7 +13,7 @@ set(JNI_HEADER_NAME "JTox.h")
 set(JAR_TARGET_NAME jToxcore)
 
 # Target name for shared library
-set(LIB_TARGET_NAME jtoxcre)
+set(LIB_TARGET_NAME jtoxcore)
 
 # Subdir for Java code
 add_subdirectory (src)

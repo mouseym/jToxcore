@@ -19,3 +19,5 @@ target_link_libraries(
 	${LIB_TARGET_NAME}
 	${libtoxcore_LIBRARIES}
 )
+
+add_dependencies(${LIB_TARGET_NAME} ${JAR_TARGET_NAME})
