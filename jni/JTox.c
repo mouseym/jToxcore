@@ -24,7 +24,7 @@
 #include <arpa/inet.h>
 #include <tox/tox.h>
 
-#include "im_tox_jtoxcore_JTox.h"
+#include "JTox.h"
 #include "callbacks.h"
 
 #define ADDR_SIZE_HEX (TOX_FRIEND_ADDRESS_SIZE * 2 + 1)

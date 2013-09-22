@@ -18,7 +18,7 @@ vpath %.class $(CLASS_PATH)/im/tox/jtoxcore
 
 # $* matches the target filename without the extension
 JTox.h : JTox.class
-	javah -classpath $(CLASS_PATH) $(PACKAGE_NAME).$*
+	javah -classpath $(CLASS_PATH) -o JTox.h $(PACKAGE_NAME).$*
 
 clean :
 	rm -f libjtox.so JTox.o

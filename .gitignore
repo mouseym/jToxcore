@@ -8,7 +8,7 @@ build/
 .cproject
 
 # Headers are automatically generated with javah, should not be under version control
-jni/im_tox_jtoxcore_JTox.h
+jni/JTox.h
 
 # Object files
 *.o

@@ -3,15 +3,14 @@ find_package(JNI REQUIRED)
 
 include(UseJava)
 
-# Name for the .jar File
-set(TARGET_NAME jToxcore)
+set(PACKAGE_NAME im.tox.jtoxcore)
 
 # Output directory for .jar file and java .class files
 set(CMAKE_JAVA_TARGET_OUTPUT_DIR "${PROJECT_BINARY_DIR}/bin")
 
 # Since class files are apparently not removed by
 # 'make clean', create a list and remove them manually
-set(CLASSDIR "${CMAKE_JAVA_TARGET_OUTPUT_DIR}/CMakeFiles/${TARGET_NAME}.dir")
+set(CLASSDIR "${CMAKE_JAVA_TARGET_OUTPUT_DIR}/CMakeFiles/${JAR_TARGET_NAME}.dir")
 set(CLEANFILES
 	"${CLASSDIR}/im/tox/jtoxcore/JTox.class"
         "${CLASSDIR}/im/tox/jtoxcore/ToxError.class"
@@ -27,6 +26,7 @@ set(CLEANFILES
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnStatusMessageCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnUserStatusCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/ToxCallback.class"
+	"${JNI_HEADER_LOCATION}/${JNI_HEADER_NAME}"
 )
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEANFILES}")
 
@@ -54,6 +54,23 @@ set(JTOX_CALLBACKS
 
 set(JTOX_SOURCE ${JTOX_CORE} ${JTOX_CALLBACKS})
 
+# set version for .jar
+set(CMAKE_JAVA_TARGET_VERSION ${JTOXCORE_VERSION})
 # .jar target
-add_jar(${TARGET_NAME} ${JTOX_SOURCE})
+add_jar(${JAR_TARGET_NAME} ${JTOX_SOURCE})
 
+# Set arguments for javah command
+set(JAVAH_ARGS 
+	"-classpath"
+	"${CLASSDIR}"
+	"-o"
+	"${JNI_HEADER_LOCATION}/${JNI_HEADER_NAME}"
+	"${PACKAGE_NAME}.JTox"
+)
+
+# Create custom command for javah, will be executed after add_jar
+add_custom_command(
+	TARGET ${JAR_TARGET_NAME}
+	POST_BUILD
+	COMMAND ${Java_JAVAH_EXECUTABLE} ARGS ${JAVAH_ARGS}
+)
