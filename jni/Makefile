@@ -5,13 +5,13 @@ GCC_INCLUDE = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
 # Package name
 PACKAGE_NAME = im.tox.jtoxcore
 
-all : libjtox.so
+all : libjtoxcore.so
 
 libjtoxcore.so : JTox.o
 	gcc -shared -o $@ $< -ltoxcore
 
 JTox.o : JTox.c JTox.h
-	LANG="en_US.UTF-8" gcc $(GCC_INCLUDE) -fPIC -ggdb -c $< -o $@
+	LANG="en_US.UTF-8" gcc $(GCC_INCLUDE) -I/usr/include/tox/ -fPIC -ggdb -c $< -o $@
 
 # Define a virtual path for .class in the bin directory
 vpath %.class $(CLASS_PATH)/im/tox/jtoxcore
@@ -21,4 +21,4 @@ JTox.h : JTox.class
 	javah -classpath $(CLASS_PATH) -o JTox.h $(PACKAGE_NAME).$*
 
 clean :
-	rm -f libjtox.so JTox.o
+	rm -f libjtoxcore.so JTox.o

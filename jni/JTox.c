@@ -21,7 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WIN32
+#include <winsock2.h>
+#include <windows.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include <tox/tox.h>
 
 #include "JTox.h"
@@ -485,16 +490,15 @@ JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1sends_1receipts(
 
 JNIEXPORT jintArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friendlist(
 		JNIEnv *env, jobject obj, jlong messenger) {
-	int *list;
-	uint32_t length;
-	int ret = tox_get_friendlist(((tox_jni_globals_t *) messenger)->tox, &list,
-			&length);
-	if (ret == -1) {
+	uint32_t length = tox_count_friendlist(((tox_jni_globals_t *) messenger)->tox);
+	int *list = malloc(length);
+	uint32_t actual_length = tox_copy_friendlist(((tox_jni_globals_t *) messenger)->tox, list, length);
+	if (actual_length == -1) {
 		free(list);
 		return 0;
 	} else {
-		jintArray arr = (*env)->NewIntArray(env, length);
-		(*env)->SetIntArrayRegion(env, arr, 0, length, list);
+		jintArray arr = (*env)->NewIntArray(env, actual_length);
+		(*env)->SetIntArrayRegion(env, arr, 0, actual_length, list);
 		free(list);
 		return arr;
 	}
