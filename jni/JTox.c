@@ -478,7 +478,7 @@ JNIEXPORT jintArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friendlist(
 		return 0;
 	} else {
 		jintArray arr = (*env)->NewIntArray(env, actual_length);
-		(*env)->SetIntArrayRegion(env, arr, 0, actual_length, list);
+		(*env)->SetIntArrayRegion(env, arr, 0, actual_length, (jint *) list);
 		free(list);
 		return arr;
 	}
