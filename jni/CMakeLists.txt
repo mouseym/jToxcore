@@ -57,3 +57,6 @@ target_link_libraries(
 )
 
 add_dependencies(${LIB_TARGET_NAME} ${JAR_TARGET_NAME})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set_target_properties(${LIB_TARGET_NAME} PROPERTIES PREFIX "")
+endif()
