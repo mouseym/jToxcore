@@ -15,6 +15,14 @@ set(JAR_TARGET_NAME jToxcore)
 # Target name for shared library
 set(LIB_TARGET_NAME jtoxcore)
 
+# Target name for test 
 # Subdir for Java code
 add_subdirectory (src)
 add_subdirectory (jni)
+
+if(DEFINED BUILD_TESTCLIENT)
+	if(${BUILD_TESTCLIENT} STREQUAL "y")
+		set(TEST_TARGET_NAME jToxtest)
+		add_subdirectory (test)
+	endif()
+endif()
