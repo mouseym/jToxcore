@@ -164,7 +164,7 @@ public class JTox {
 	 *            length of the message sent to friend
 	 * @return friend number on success, error code on failure
 	 */
-	private native int tox_addfriend(long messengerPointer, String address,
+	private native int tox_addfriend(long messengerPointer, byte[] address,
 			byte[] data, int length);
 
 	/**
@@ -181,13 +181,14 @@ public class JTox {
 	 */
 	public int addFriend(String address, String data) throws ToxException {
 		byte[] dataArray = getStringBytes(data);
+		byte[] addressArray = hexToByteArray(address);
 		lock.lock();
 		int errcode;
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend(this.messengerPointer, address, dataArray,
-					dataArray.length);
+			errcode = tox_addfriend(this.messengerPointer, addressArray,
+					dataArray, dataArray.length);
 
 		} finally {
 			lock.unlock();
@@ -210,7 +211,7 @@ public class JTox {
 	 * @return the local number of the friend in your list
 	 */
 	private native int tox_addfriend_norequest(long messengerPointer,
-			String address);
+			byte[] address);
 
 	/**
 	 * Confirm a friend request, or add a friend to your own list without
@@ -224,12 +225,14 @@ public class JTox {
 	 *             the friend
 	 */
 	public int confirmRequest(String address) throws ToxException {
+		byte[] addressArray = hexToByteArray(address);
 		lock.lock();
 		int errcode;
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend_norequest(this.messengerPointer, address);
+			errcode = tox_addfriend_norequest(this.messengerPointer,
+					addressArray);
 		} finally {
 			lock.unlock();
 		}
@@ -286,7 +289,7 @@ public class JTox {
 	 * @return the local id of the specified friend, or -1 if friend does not
 	 *         exist
 	 */
-	private native int tox_getfriend_id(long messengerPointer, String clientid);
+	private native int tox_getfriend_id(long messengerPointer, byte[] clientid);
 
 	/**
 	 * Returns the local id of a friend given a public key. Throws an exception
@@ -299,12 +302,13 @@ public class JTox {
 	 *             if the instance has been killed or the friend does not exist
 	 */
 	public int getFriendId(String clientid) throws ToxException {
+		byte[] clientArray = hexToByteArray(clientid);
 		lock.lock();
 		int errcode;
 		try {
 			checkPointer();
 
-			errcode = tox_getfriend_id(this.messengerPointer, clientid);
+			errcode = tox_getfriend_id(this.messengerPointer, clientArray);
 		} finally {
 			lock.unlock();
 		}
@@ -398,7 +402,7 @@ public class JTox {
 	 *            public key of the bootstrap node
 	 */
 	private native int tox_bootstrap(long messengerPointer, String ip,
-			int port, String pubkey);
+			int port, byte[] pubkey);
 
 	/**
 	 * Method used to bootstrap the client's connection.
@@ -423,11 +427,12 @@ public class JTox {
 		if (port < 0 || port > 65535) {
 			throw new ToxException(ToxError.TOX_INVALID_PORT);
 		}
+		byte[] pubkeyArray = hexToByteArray(pubkey);
 		lock.lock();
 		try {
 			checkPointer();
 
-			if (tox_bootstrap(this.messengerPointer, host, port, pubkey) == 0) {
+			if (tox_bootstrap(this.messengerPointer, host, port, pubkeyArray) == 0) {
 				throw new UnknownHostException(host);
 			}
 
@@ -1406,30 +1411,31 @@ public class JTox {
 
 	/**
 	 * Get a list of all currently valid friend numbers.
-	 * @return ArrayList containing the 
+	 * 
+	 * @return ArrayList containing the
 	 */
 	public ArrayList<Integer> getFriendList() throws ToxException {
 		lock.lock();
 		int[] ids;
 		try {
 			checkPointer();
-			
+
 			ids = tox_get_friendlist(this.messengerPointer);
 		} finally {
 			lock.unlock();
 		}
-		
-		if(ids == null) {
+
+		if (ids == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
 			ArrayList<Integer> list = new ArrayList<Integer>();
-			for(int i : ids) {
+			for (int i : ids) {
 				list.add(i);
 			}
 			return list;
 		}
 	}
-	
+
 	/**
 	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
 	 * a nullbyte at the end for convenience
@@ -1450,6 +1456,15 @@ public class JTox {
 		}
 	}
 
+	/**
+	 * Turns the given byte array into a UTF-8 encoded string
+	 * 
+	 * @param in
+	 *            the byte array to convert
+	 * @return an UTF-8 String based on the given byte array
+	 * @throws ToxException
+	 *             if the UTF-8 encoding is not supported
+	 */
 	public static String getByteString(byte[] in) throws ToxException {
 		try {
 			return new String(in, "UTF-8");
@@ -1458,5 +1473,25 @@ public class JTox {
 			e1.initCause(e);
 			throw e1;
 		}
+	}
+
+	/**
+	 * Convert a given hexadecimal String to a byte array.
+	 * 
+	 * @param in
+	 *            String to convert
+	 * @return byte array representation of the hexadecimal String
+	 */
+	public static byte[] hexToByteArray(String in) {
+		if (in.length() % 2 != 0) {
+			throw new IllegalArgumentException();
+		}
+		int length = in.length() / 2;
+		byte[] out = new byte[length];
+		for (int i = 0; i < length; i += 2) {
+			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
+					.digit(in.charAt(i + 1), 16));
+		}
+		return out;
 	}
 }

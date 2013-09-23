@@ -52,22 +52,6 @@ void addr_to_hex(uint8_t *addr, char *buf) {
 }
 
 /**
- * Convert a given human-readable hexadecimal string into binary
- */
-void hex_to_addr(const char *hex, uint8_t *buf) {
-	size_t len = strlen(hex);
-	char *pos = strdup(hex);
-	uint32_t i;
-	for (i = 0; i < len; ++i, pos += 2) {
-		sscanf(pos, "%2hhx", &buf[i]);
-	}
-
-	for (i = 0; i < len; ++i) {
-		pos -= 2;
-	}
-	free(pos);
-}
-/**
  * Null-terminate the given string. Length is the length of the original string,
  * out must be allocated with a size of at least length+1
  */
@@ -99,19 +83,16 @@ JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv * env,
 }
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap(JNIEnv * env,
-		jobject obj, jlong messenger, jstring ip, jint port, jstring address) {
+		jobject obj, jlong messenger, jstring ip, jint port, jbyteArray address) {
 	const char *_ip = (*env)->GetStringUTFChars(env, ip, 0);
-	const char *_address = (*env)->GetStringUTFChars(env, address, 0);
-	uint8_t *__address = malloc(strlen(_address) + 1);
-	hex_to_addr(_address, __address);
-	(*env)->ReleaseStringUTFChars(env, address, _address);
+	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
 	uint16_t _port = htons((uint16_t) port);
 
 	jint result = tox_bootstrap_from_address(
-			((tox_jni_globals_t *) messenger)->tox, _ip, 1, _port, __address);
+			((tox_jni_globals_t *) messenger)->tox, _ip, 1, _port, _address);
 
 	(*env)->ReleaseStringUTFChars(env, ip, _ip);
-
+	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
 	return result;
 }
 
@@ -218,29 +199,27 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1load(JNIEnv *env,
  */
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend(JNIEnv * env,
-		jobject obj, jlong messenger, jstring address, jbyteArray data,
+		jobject obj, jlong messenger, jbyteArray address, jbyteArray data,
 		jint length) {
-	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
+	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
 	uint8_t *_data = (*env)->GetByteArrayElements(env, data, 0);
 
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-
-	(*env)->ReleaseStringUTFChars(env, address, _address);
-
-	return tox_addfriend(((tox_jni_globals_t *) messenger)->tox, __address,
+	int ret = tox_addfriend(((tox_jni_globals_t *) messenger)->tox, _address,
 			_data, length);
+
+	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
+	(*env)->ReleaseByteArrayElements(env, data, _data, JNI_ABORT);
+	return ret;
 }
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1addfriend_1norequest(
-		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
-	const char *_address = (*env)->GetStringUTFChars(env, address, 0);
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-	(*env)->ReleaseStringUTFChars(env, address, _address);
+		JNIEnv * env, jobject obj, jlong messenger, jbyteArray address) {
+	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
 
-	return tox_addfriend_norequest(((tox_jni_globals_t *) messenger)->tox,
-			__address);
+	int ret = tox_addfriend_norequest(((tox_jni_globals_t *) messenger)->tox,
+			_address);
+	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
+	return ret;
 }
 
 JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
@@ -256,13 +235,12 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getaddress(
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1getfriend_1id(
 		JNIEnv * env, jobject obj, jlong messenger, jstring address) {
-	const uint8_t *_address = (*env)->GetStringUTFChars(env, address, 0);
+	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
 
-	uint8_t __address[TOX_FRIEND_ADDRESS_SIZE];
-	hex_to_addr(_address, __address);
-	(*env)->ReleaseStringUTFChars(env, address, _address);
-
-	return tox_getfriend_id(((tox_jni_globals_t *) messenger)->tox, __address);
+	int ret = tox_getfriend_id(((tox_jni_globals_t *) messenger)->tox,
+			_address);
+	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
+	return ret;
 }
 
 JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1getclient_1id(
@@ -490,9 +468,11 @@ JNIEXPORT void JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1sends_1receipts(
 
 JNIEXPORT jintArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friendlist(
 		JNIEnv *env, jobject obj, jlong messenger) {
-	uint32_t length = tox_count_friendlist(((tox_jni_globals_t *) messenger)->tox);
+	uint32_t length = tox_count_friendlist(
+			((tox_jni_globals_t *) messenger)->tox);
 	int *list = malloc(length);
-	uint32_t actual_length = tox_copy_friendlist(((tox_jni_globals_t *) messenger)->tox, list, length);
+	uint32_t actual_length = tox_copy_friendlist(
+			((tox_jni_globals_t *) messenger)->tox, list, length);
 	if (actual_length == -1) {
 		free(list);
 		return 0;
