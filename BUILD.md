@@ -34,8 +34,7 @@ mkdir build
 cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=~/myWin64Toolchain -DJNI_H=~/include/win64/jni -DJNI_MD_H=~/include/win64/jnimd
 ```
-
-When CMake completes, you can generate the output files with ```make``` as described above.
+If the jni_md.h header is in the same directory as the jni.h header, you can safely pass only ```JNI_H```, and add ```NEED_JNI_MD=n```. When CMake completes, you can generate the output files with ```make``` as described above.
 
 
 ## Building the testing client ##
