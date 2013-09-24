@@ -143,6 +143,8 @@ public class JTox {
 	 * struct in messengerPointer. Also attempts to load the specified byte
 	 * array into this instance.
 	 * 
+	 * @param data
+	 *            the data to load for the new tox instance
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
@@ -182,7 +184,7 @@ public class JTox {
 	public int addFriend(String address, String data) throws ToxException {
 		byte[] dataArray = getStringBytes(data);
 		byte[] addressArray = hexToByteArray(address);
-		lock.lock();
+		this.lock.lock();
 		int errcode;
 		try {
 			checkPointer();
@@ -191,7 +193,7 @@ public class JTox {
 					dataArray, dataArray.length);
 
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (errcode >= 0) {
@@ -226,7 +228,7 @@ public class JTox {
 	 */
 	public int confirmRequest(String address) throws ToxException {
 		byte[] addressArray = hexToByteArray(address);
-		lock.lock();
+		this.lock.lock();
 		int errcode;
 		try {
 			checkPointer();
@@ -234,7 +236,7 @@ public class JTox {
 			errcode = tox_addfriend_norequest(this.messengerPointer,
 					addressArray);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (errcode >= 0) {
@@ -263,13 +265,13 @@ public class JTox {
 	 *             trying to get our address
 	 */
 	public String getAddress() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		String address;
 		try {
 			checkPointer();
 			address = tox_getaddress(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (address == null || address.equals("")) {
@@ -303,14 +305,14 @@ public class JTox {
 	 */
 	public int getFriendId(String clientid) throws ToxException {
 		byte[] clientArray = hexToByteArray(clientid);
-		lock.lock();
+		this.lock.lock();
 		int errcode;
 		try {
 			checkPointer();
 
 			errcode = tox_getfriend_id(this.messengerPointer, clientArray);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (errcode == -1) {
@@ -345,14 +347,14 @@ public class JTox {
 	 *             attempting to fetch the client id
 	 */
 	public String getClientId(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		String result;
 		try {
 			checkPointer();
 
 			result = tox_getclient_id(this.messengerPointer, friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (result == null || result.equals("")) {
@@ -379,13 +381,13 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public void doTox() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_do(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -428,7 +430,7 @@ public class JTox {
 			throw new ToxException(ToxError.TOX_INVALID_PORT);
 		}
 		byte[] pubkeyArray = hexToByteArray(pubkey);
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
@@ -437,7 +439,7 @@ public class JTox {
 			}
 
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -457,17 +459,17 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public boolean isConnected() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
-			if (tox_isconnected(messengerPointer) == 0) {
+			if (tox_isconnected(this.messengerPointer) == 0) {
 				return false;
 			} else {
 				return true;
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -495,13 +497,13 @@ public class JTox {
 	 */
 	public void setOnFriendRequestCallback(OnFriendRequestCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_onfriendrequest(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -523,7 +525,7 @@ public class JTox {
 	 *             in case the instance has already been killed
 	 */
 	public void killTox() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
@@ -531,7 +533,7 @@ public class JTox {
 			validPointers.remove(this.messengerPointer);
 			tox_kill(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -558,13 +560,13 @@ public class JTox {
 	 */
 	public void setOnMessageCallback(OnMessageCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_onfriendmessage(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -591,13 +593,13 @@ public class JTox {
 	 */
 	public void setOnActionCallback(OnActionCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_onaction(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -624,13 +626,13 @@ public class JTox {
 	 */
 	public void setOnNameChangeCallback(OnNameChangeCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_onnamechange(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -658,13 +660,13 @@ public class JTox {
 	 */
 	public void setOnStatusMessageCallback(OnStatusMessageCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_onstatusmessage(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -692,13 +694,13 @@ public class JTox {
 	 */
 	public void setOnUserStatusCallback(OnUserStatusCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_on_userstatus(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -725,13 +727,13 @@ public class JTox {
 	 */
 	public void setOnReadReceiptCallback(OnReadReceiptCallback callback)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_on_read_receipt(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -759,13 +761,13 @@ public class JTox {
 	 */
 	public void setOnConnectionStatusCallback(
 			OnConnectionStatusCallback callback) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_on_connectionstatus(this.messengerPointer, callback);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -789,7 +791,7 @@ public class JTox {
 	 *             if the instance has been killed or an error occurred
 	 */
 	public void deleteFriend(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
@@ -797,7 +799,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -831,7 +833,7 @@ public class JTox {
 	 */
 	public int sendMessage(int friendnumber, String message)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] messageArray = getStringBytes(message);
 		int result;
 		try {
@@ -840,7 +842,7 @@ public class JTox {
 			result = tox_sendmessage(this.messengerPointer, friendnumber,
 					messageArray, messageArray.length);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (result == 0) {
@@ -887,7 +889,7 @@ public class JTox {
 	public int sendMessage(int friendnumber, String message, int messageID)
 			throws ToxException {
 		byte[] messageArray = getStringBytes(message);
-		lock.lock();
+		this.lock.lock();
 		int result;
 		try {
 			checkPointer();
@@ -896,7 +898,7 @@ public class JTox {
 					messageArray, messageArray.length, messageID);
 
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (result == 0) {
@@ -932,7 +934,7 @@ public class JTox {
 	 *             error occurred
 	 */
 	public void setName(String newname) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] newnameArray = getStringBytes(newname);
 		if (newnameArray.length >= TOX_MAX_NICKNAME_LENGTH) {
 			throw new ToxException(ToxError.TOX_TOOLONG);
@@ -945,7 +947,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -976,7 +978,7 @@ public class JTox {
 	 *             if the instance has been killed or the send failed
 	 */
 	public void sendAction(int friendnumber, String action) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] actionArray = getStringBytes(action);
 		try {
 			checkPointer();
@@ -986,7 +988,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1007,14 +1009,14 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public String getSelfName() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		String name;
 		try {
 			checkPointer();
 
 			name = tox_getselfname(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (name == null) {
@@ -1049,7 +1051,7 @@ public class JTox {
 	 *             another error occurred
 	 */
 	public void setStatusMessage(String message) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] messageArray = getStringBytes(message);
 		if (messageArray.length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
 			throw new ToxException(ToxError.TOX_TOOLONG);
@@ -1062,7 +1064,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1087,14 +1089,14 @@ public class JTox {
 	 *             if the instance has been killed or an error occurred
 	 */
 	public String getName(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] name;
 		try {
 			checkPointer();
 
 			name = tox_getname(this.messengerPointer, friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (name == null) {
@@ -1125,7 +1127,7 @@ public class JTox {
 	 *             status
 	 */
 	public void setUserStatus(ToxUserStatus status) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
@@ -1133,7 +1135,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1160,14 +1162,14 @@ public class JTox {
 	 *             getting the status message
 	 */
 	public String getStatusMessage(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] status;
 		try {
 			checkPointer();
 
 			status = tox_getstatusmessage(this.messengerPointer, friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (status == null) {
@@ -1199,13 +1201,13 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public boolean friendExists(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			return tox_friendexists(this.messengerPointer, friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1225,14 +1227,14 @@ public class JTox {
 	 * @throws ToxException
 	 */
 	public String getStatusMessage() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		byte[] message;
 		try {
 			checkPointer();
 
 			message = tox_getselfstatusmessage(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (message == null) {
@@ -1264,13 +1266,13 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public ToxUserStatus getUserStatus(int friendnumber) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			return tox_get_userstatus(this.messengerPointer, friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1285,14 +1287,20 @@ public class JTox {
 	 */
 	private native ToxUserStatus tox_get_selfuserstatus(long messengerPointer);
 
+	/**
+	 * Get our own current status
+	 * 
+	 * @return one of {@link ToxUserStatus}
+	 * @throws ToxException
+	 */
 	public ToxUserStatus getSelfUserStatus() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			return tox_get_selfuserstatus(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1325,14 +1333,14 @@ public class JTox {
 	 */
 	public void setSendReceipts(boolean sendReceipts, int friendnumber)
 			throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			tox_set_sends_receipts(this.messengerPointer, sendReceipts,
 					friendnumber);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1354,13 +1362,13 @@ public class JTox {
 	 *             if the instance has been killed
 	 */
 	public byte[] save() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
 			return tox_save(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1388,7 +1396,7 @@ public class JTox {
 	 *             loading
 	 */
 	public void load(byte[] data) throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		try {
 			checkPointer();
 
@@ -1396,7 +1404,7 @@ public class JTox {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 
@@ -1413,16 +1421,18 @@ public class JTox {
 	 * Get a list of all currently valid friend numbers.
 	 * 
 	 * @return ArrayList containing the
+	 * @throws ToxException
+	 *             if the instance was killed, or the list was not retrieved
 	 */
 	public ArrayList<Integer> getFriendList() throws ToxException {
-		lock.lock();
+		this.lock.lock();
 		int[] ids;
 		try {
 			checkPointer();
 
 			ids = tox_get_friendlist(this.messengerPointer);
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 
 		if (ids == null) {

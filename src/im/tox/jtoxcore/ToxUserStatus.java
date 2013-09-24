@@ -23,12 +23,25 @@ package im.tox.jtoxcore;
 
 /**
  * Enum for wrapping userstatus
+ * 
  * @author sonOfra
- *
+ * 
  */
 public enum ToxUserStatus {
+	/**
+	 * No userstatus specified, just online/offline
+	 */
 	TOX_USERSTATUS_NONE,
+	/**
+	 * User is currently away
+	 */
 	TOX_USERSTATUS_AWAY,
+	/**
+	 * User is busy
+	 */
 	TOX_USERSTATUS_BUSY,
+	/**
+	 * User has an invalid status
+	 */
 	TOX_USERSTATUS_INVALID;
 }
