@@ -5,7 +5,7 @@ include(UseJava)
 set(PACKAGE_NAME im.tox.jtoxcore)
 
 # Output directory for .jar file and java .class files
-set(CMAKE_JAVA_TARGET_OUTPUT_DIR "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_JAVA_TARGET_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Since class files are apparently not removed by
 # 'make clean', create a list and remove them manually
@@ -75,3 +75,19 @@ add_custom_command(
 )
 file(MAKE_DIRECTORY ${JNI_HEADER_LOCATION})
 
+if(${BUILD_JAVADOC} MATCHES y)
+	set(JAVADOC_SOURCES 
+		${JTOX_SOURCE}
+		im/tox/jtoxcore/package-info.java
+		im/tox/jtoxcore/callbacks/package-info.java
+	)
+	create_javadoc(${JAVADOC_TARGET_NAME}
+		FILES ${JAVADOC_SOURCES}
+		CLASSPATH ${CLASSDIR}
+		WINDOWTITLE "${JAR_TARGET_NAME}-${CMAKE_JAVA_TARGET_VERSION}"
+		DOCTITLE "<h1>${JAR_TARGET_NAME}-${CMAKE_JAVA_TARGET_VERSION}</h1>"
+		AUTHOR TRUE
+		USE TRUE
+		VERSION TRUE
+	)
+endif()

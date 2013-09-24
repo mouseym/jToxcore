@@ -485,7 +485,7 @@ public class JTox {
 	/**
 	 * Method used to set a callback method for receiving friend requests. Any
 	 * time a friend request is received on this Tox instance, the
-	 * {@link OnFriendRequestCallback#execute(String, String)} method will be
+	 * {@link OnFriendRequestCallback#execute(String, byte[])} method will be
 	 * executed.
 	 * 
 	 * @param callback
@@ -549,7 +549,7 @@ public class JTox {
 	/**
 	 * Method used to set a callback method for receiving messages. Any time a
 	 * message is received on this Tox instance, the
-	 * {@link OnMessageCallback#execute(int, String)} method will be executed.
+	 * {@link OnMessageCallback#execute(int, byte[])} method will be executed.
 	 * 
 	 * @param callback
 	 *            the callback to set for receiving messages
@@ -582,7 +582,7 @@ public class JTox {
 	/**
 	 * Method used to set a callback method for receiving actions. Any time an
 	 * action is received on this Tox instance, the
-	 * {@link OnActionCallback#execute(int, String)} method will be executed.
+	 * {@link OnActionCallback#execute(int, byte[])} method will be executed.
 	 * 
 	 * @param callback
 	 *            the callback to set for receivin actions
@@ -615,7 +615,7 @@ public class JTox {
 	/**
 	 * Method used to set a callback method for receiving name changes. Any time
 	 * a name change is received on this tox instance, the
-	 * {@link OnNameChangeCallback#execute(int, String)} method will be executed
+	 * {@link OnNameChangeCallback#execute(int, byte[])} method will be executed
 	 * 
 	 * @param callback
 	 *            the callback to set for receiving name changes
@@ -648,7 +648,7 @@ public class JTox {
 	/**
 	 * Method used to set a callback method for receiving status message
 	 * changes. Any time a status message change is received on ths tox
-	 * instance, the {@link OnStatusMessageCallback#execute(int, String)} method
+	 * instance, the {@link OnStatusMessageCallback#execute(int, byte[])} method
 	 * will be executed
 	 * 
 	 * @param callback
