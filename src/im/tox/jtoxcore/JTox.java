@@ -118,6 +118,63 @@ public class JTox {
 	}
 
 	/**
+	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
+	 * a nullbyte at the end for convenience
+	 * 
+	 * @param in
+	 *            the String to convert
+	 * @return a byte array
+	 * @throws ToxException
+	 *             if the UTF-8 encoding is not supported
+	 */
+	public static byte[] getStringBytes(String in) throws ToxException {
+		try {
+			return in.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+			e1.initCause(e);
+			throw e1;
+		}
+	}
+
+	/**
+	 * Turns the given byte array into a UTF-8 encoded string
+	 * 
+	 * @param in
+	 *            the byte array to convert
+	 * @return an UTF-8 String based on the given byte array
+	 */
+	public static String getByteString(byte[] in) {
+		try {
+			return new String(in, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			RuntimeException e1 = new RuntimeException("We need UTF-8. Sorry.");
+			e1.initCause(e);
+			throw e1;
+		}
+	}
+
+	/**
+	 * Convert a given hexadecimal String to a byte array.
+	 * 
+	 * @param in
+	 *            String to convert
+	 * @return byte array representation of the hexadecimal String
+	 */
+	public static byte[] hexToByteArray(String in) {
+		if (in.length() % 2 != 0) {
+			throw new IllegalArgumentException();
+		}
+		int length = in.length() / 2;
+		byte[] out = new byte[length];
+		for (int i = 0; i < length; i += 2) {
+			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
+					.digit(in.charAt(i + 1), 16));
+		}
+		return out;
+	}
+
+	/**
 	 * Native call to tox_new
 	 * 
 	 * @return the pointer to the messenger struct on success, 0 on failure
@@ -1202,62 +1259,5 @@ public class JTox {
 			}
 			return list;
 		}
-	}
-
-	/**
-	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
-	 * a nullbyte at the end for convenience
-	 * 
-	 * @param in
-	 *            the String to convert
-	 * @return a byte array
-	 * @throws ToxException
-	 *             if the UTF-8 encoding is not supported
-	 */
-	public static byte[] getStringBytes(String in) throws ToxException {
-		try {
-			return in.getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
-			e1.initCause(e);
-			throw e1;
-		}
-	}
-
-	/**
-	 * Turns the given byte array into a UTF-8 encoded string
-	 * 
-	 * @param in
-	 *            the byte array to convert
-	 * @return an UTF-8 String based on the given byte array
-	 */
-	public static String getByteString(byte[] in) {
-		try {
-			return new String(in, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			RuntimeException e1 = new RuntimeException("We need UTF-8. Sorry.");
-			e1.initCause(e);
-			throw e1;
-		}
-	}
-
-	/**
-	 * Convert a given hexadecimal String to a byte array.
-	 * 
-	 * @param in
-	 *            String to convert
-	 * @return byte array representation of the hexadecimal String
-	 */
-	public static byte[] hexToByteArray(String in) {
-		if (in.length() % 2 != 0) {
-			throw new IllegalArgumentException();
-		}
-		int length = in.length() / 2;
-		byte[] out = new byte[length];
-		for (int i = 0; i < length; i += 2) {
-			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
-					.digit(in.charAt(i + 1), 16));
-		}
-		return out;
 	}
 }
