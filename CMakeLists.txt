@@ -3,7 +3,7 @@ project (jToxcore)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 # Version
-set(JTOXCORE_VERSION 0.3.0)
+set(JTOXCORE_VERSION 0.3.1)
 
 # JNI Header information
 set(JNI_HEADER_LOCATION "${CMAKE_BINARY_DIR}/header")
