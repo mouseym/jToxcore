@@ -24,7 +24,7 @@ set(CLEANFILES
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnReadReceiptCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnStatusMessageCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnUserStatusCallback.class"
-        "${CLASSDIR}/im/tox/jtoxcore/callbacks/ToxCallback.class"
+        "${CLASSDIR}/im/tox/jtoxcore/callbacks/CallbackHandler.class"
 	"${JNI_HEADER_LOCATION}/${JNI_HEADER_NAME}"
 )
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${CLEANFILES}")
@@ -48,7 +48,7 @@ set(JTOX_CALLBACKS
         im/tox/jtoxcore/callbacks/OnReadReceiptCallback.java
         im/tox/jtoxcore/callbacks/OnStatusMessageCallback.java
         im/tox/jtoxcore/callbacks/OnUserStatusCallback.java
-        im/tox/jtoxcore/callbacks/ToxCallback.java
+        im/tox/jtoxcore/callbacks/CallbackHandler.java
 )
 
 set(JTOX_SOURCE ${JTOX_CORE} ${JTOX_CALLBACKS})

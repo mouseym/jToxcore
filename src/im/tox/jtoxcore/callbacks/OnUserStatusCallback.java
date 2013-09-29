@@ -20,7 +20,6 @@
  */
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
 import im.tox.jtoxcore.ToxUserStatus;
 
 /**
@@ -29,17 +28,7 @@ import im.tox.jtoxcore.ToxUserStatus;
  * @author sonOfRa
  * 
  */
-public abstract class OnUserStatusCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnUserStatusCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnUserStatusCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnUserStatusCallback {
 
 	/**
 	 * Method to be executed each time a friend changes their status message

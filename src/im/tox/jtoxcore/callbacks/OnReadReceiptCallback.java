@@ -21,25 +21,13 @@
 
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
-
 /**
  * Callback class for receiving read receipts
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnReadReceiptCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnReadReceiptCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnReadReceiptCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnReadReceiptCallback {
 
 	/**
 	 * Method to be executed each time a read receipt is received

@@ -20,25 +20,13 @@
  */
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
-
 /**
  * Callback class for receiving name changes
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnNameChangeCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnNameChangeCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnNameChangeCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnNameChangeCallback {
 
 	/**
 	 * Method to be executed each time a name change is received from a friend
@@ -48,5 +36,5 @@ public abstract class OnNameChangeCallback extends ToxCallback {
 	 * @param newname
 	 *            the new name
 	 */
-	public abstract void execute(int friendnumber, byte[] newname);
+	public abstract void execute(int friendnumber, String newname);
 }

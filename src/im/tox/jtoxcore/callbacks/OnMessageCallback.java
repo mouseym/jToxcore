@@ -20,25 +20,13 @@
  */
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
-
 /**
  * Callback class for receiving messages
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnMessageCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnMessageCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnMessageCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnMessageCallback {
 
 	/**
 	 * Method to be executed each time a message is received
@@ -48,5 +36,5 @@ public abstract class OnMessageCallback extends ToxCallback {
 	 * @param message
 	 *            the message
 	 */
-	public abstract void execute(int friendnumber, byte[] message);
+	public abstract void execute(int friendnumber, String message);
 }

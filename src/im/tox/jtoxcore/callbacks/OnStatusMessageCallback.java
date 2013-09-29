@@ -20,25 +20,13 @@
  */
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
-
 /**
  * Callback for receiving status message changes
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnStatusMessageCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnStatusMessageCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnStatusMessageCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnStatusMessageCallback {
 
 	/**
 	 * Method to be executed each time a friend changes their status message
@@ -48,5 +36,5 @@ public abstract class OnStatusMessageCallback extends ToxCallback {
 	 * @param newstatus
 	 *            the new status message
 	 */
-	public abstract void execute(int friendnumber, byte[] newstatus);
+	public abstract void execute(int friendnumber, String newstatus);
 }

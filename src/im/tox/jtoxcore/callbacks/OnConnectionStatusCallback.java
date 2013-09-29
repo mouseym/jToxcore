@@ -20,25 +20,13 @@
  */
 package im.tox.jtoxcore.callbacks;
 
-import im.tox.jtoxcore.JTox;
-
 /**
  * Callback class for receiving connection status changes from friends
  * 
  * @author sonOfRa
  * 
  */
-public abstract class OnConnectionStatusCallback extends ToxCallback {
-
-	/**
-	 * Default constructor for {@link OnConnectionStatusCallback}
-	 * 
-	 * @param jtox
-	 *            the {@link JTox} instance to use for this callback
-	 */
-	public OnConnectionStatusCallback(JTox jtox) {
-		super(jtox);
-	}
+public interface OnConnectionStatusCallback {
 
 	/**
 	 * Method to be executed each time a connection status is received

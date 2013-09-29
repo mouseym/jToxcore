@@ -21,14 +21,7 @@
 
 package im.tox.jtoxcore;
 
-import im.tox.jtoxcore.callbacks.OnActionCallback;
-import im.tox.jtoxcore.callbacks.OnConnectionStatusCallback;
-import im.tox.jtoxcore.callbacks.OnFriendRequestCallback;
-import im.tox.jtoxcore.callbacks.OnMessageCallback;
-import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
-import im.tox.jtoxcore.callbacks.OnReadReceiptCallback;
-import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
-import im.tox.jtoxcore.callbacks.OnUserStatusCallback;
+import im.tox.jtoxcore.callbacks.CallbackHandler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
@@ -65,39 +58,27 @@ public class JTox {
 	}
 
 	/**
-	 * Map containing associations between pointers and Locks. This is used for
-	 * acquiring the correct lock for the current instance
-	 */
-	private static Map<Long, ReentrantLock> locks = Collections
-			.synchronizedMap(new HashMap<Long, ReentrantLock>());
-
-	/**
 	 * List containing all currently active tox instances
 	 */
 	private static List<Long> validPointers = Collections
 			.synchronizedList(new ArrayList<Long>());
 
-	/**
-	 * Grab a Lock for the current tox instance. Use this method if you need to
-	 * synchronize on the same lock that is also used by this tox instance.
-	 * 
-	 * @param messengerPointer
-	 *            the pointer to acquire a lock for
-	 * @return the lock for the specified pointer
-	 */
-	public static final ReentrantLock getLock(long messengerPointer) {
-		return locks.get(messengerPointer);
-	}
+	private static Map<Integer, JTox> instances = new HashMap<Integer, JTox>();
+	private static ReentrantLock instanceLock = new ReentrantLock();
+	private static int instanceCounter = 0;
+	private final int instanceNumber;
+
+	private CallbackHandler handler;
 
 	/**
 	 * This field contains the lock used for thread safety
 	 */
-	protected final ReentrantLock lock;
+	private final ReentrantLock lock;
 
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
 	 */
-	protected final long messengerPointer;
+	private final long messengerPointer;
 
 	/**
 	 * Utility method that checks the current pointer and throws an exception if
@@ -106,10 +87,34 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	protected final void checkPointer() throws ToxException {
+	private void checkPointer() throws ToxException {
 		if (!validPointers.contains(this.messengerPointer)) {
 			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
 		}
+	}
+
+	/**
+	 * If you need to pass a JTox instance around between different contexts,
+	 * and are unable to pass instances directly, use this method to acquire the
+	 * instance number of this instance. Once acquired, you can acquire the
+	 * instance with {@link JTox#getInstance(int)}.
+	 * 
+	 * @return the instance number
+	 */
+	public int getInstanceNumber() {
+		return this.instanceNumber;
+	}
+
+	/**
+	 * Get the instance associated with the specified instance number. This may
+	 * return <code>null</code> if either the instance was killed, or if no
+	 * instance with that number exists.
+	 * 
+	 * @param instancenumber
+	 * @return the associated instance
+	 */
+	public static JTox getInstance(int instancenumber) {
+		return instances.get(instancenumber);
 	}
 
 	/**
@@ -127,6 +132,24 @@ public class JTox {
 	 *             when the native call indicates an error
 	 */
 	public JTox() throws ToxException {
+		this(new CallbackHandler());
+	}
+
+	/**
+	 * Creates a new instance of JTox with the specified {@link CallbackHandler}
+	 * and stores the pointer to the internal struct in messengerPointer.
+	 * <p>
+	 * If you add a new Callback to a Handler that is used by more than one JTox
+	 * instance, the new callback will be executed by ALL JTox instances using
+	 * this handler.
+	 * 
+	 * @param handler
+	 *            the {@link CallbackHandler} to use
+	 * @throws ToxException
+	 *             when the native call indicates an error
+	 */
+	public JTox(CallbackHandler handler) throws ToxException {
+		this.handler = handler;
 		long pointer = tox_new();
 		if (pointer == 0) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
@@ -134,7 +157,10 @@ public class JTox {
 			this.messengerPointer = pointer;
 			this.lock = new ReentrantLock();
 			validPointers.add(pointer);
-			locks.put(pointer, this.lock);
+			instanceLock.lock();
+			this.instanceNumber = instanceCounter++;
+			instances.put(instanceCounter, this);
+			instanceLock.unlock();
 		}
 	}
 
@@ -474,40 +500,6 @@ public class JTox {
 	}
 
 	/**
-	 * Native call to tox_callback_friendrequest
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving friend requests
-	 */
-	private native void tox_onfriendrequest(long messengerPointer,
-			OnFriendRequestCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving friend requests. Any
-	 * time a friend request is received on this Tox instance, the
-	 * {@link OnFriendRequestCallback#execute(String, byte[])} method will be
-	 * executed.
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving friend requests
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnFriendRequestCallback(OnFriendRequestCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_onfriendrequest(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
 	 * Native call to tox_kill
 	 * 
 	 * @param messengerPointer
@@ -529,246 +521,12 @@ public class JTox {
 		try {
 			checkPointer();
 
-			locks.remove(this.messengerPointer);
 			validPointers.remove(this.messengerPointer);
 			tox_kill(this.messengerPointer);
 		} finally {
 			this.lock.unlock();
 		}
-	}
-
-	/**
-	 * Native call to tox_callback_friendmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving messages
-	 */
-	private native void tox_onfriendmessage(long messengerPointer,
-			OnMessageCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving messages. Any time a
-	 * message is received on this Tox instance, the
-	 * {@link OnMessageCallback#execute(int, byte[])} method will be executed.
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving messages
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnMessageCallback(OnMessageCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_onfriendmessage(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_action
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving actions
-	 */
-	private native void tox_onaction(long messengerPointer,
-			OnActionCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving actions. Any time an
-	 * action is received on this Tox instance, the
-	 * {@link OnActionCallback#execute(int, byte[])} method will be executed.
-	 * 
-	 * @param callback
-	 *            the callback to set for receivin actions
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnActionCallback(OnActionCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_onaction(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_namechange
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving name changes
-	 */
-	private native void tox_onnamechange(long messengerPointer,
-			OnNameChangeCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving name changes. Any time
-	 * a name change is received on this tox instance, the
-	 * {@link OnNameChangeCallback#execute(int, byte[])} method will be executed
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving name changes
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnNameChangeCallback(OnNameChangeCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_onnamechange(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_statusmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving status message changes
-	 */
-	private native void tox_onstatusmessage(long messengerPointer,
-			OnStatusMessageCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving status message
-	 * changes. Any time a status message change is received on ths tox
-	 * instance, the {@link OnStatusMessageCallback#execute(int, byte[])} method
-	 * will be executed
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving status message changes
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnStatusMessageCallback(OnStatusMessageCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_onstatusmessage(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_userstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving user status changes
-	 */
-	private native void tox_on_userstatus(long messengerPointer,
-			OnUserStatusCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving user status changes.
-	 * Any time a user status change is received on this tox instance, the
-	 * {@link OnUserStatusCallback#execute(int, ToxUserStatus)} method will be
-	 * executed
-	 * 
-	 * @param callback
-	 *            callback to set for receiving user status changes
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnUserStatusCallback(OnUserStatusCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_on_userstatus(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_read_receipt
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving read receipts
-	 */
-	private native void tox_on_read_receipt(long messengerPointer,
-			OnReadReceiptCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving read receipts. Any
-	 * time a read receipt is received on this tox instance, the
-	 * {@link OnReadReceiptCallback#execute(int, int)}, method will be executed
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving read receipts
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnReadReceiptCallback(OnReadReceiptCallback callback)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_on_read_receipt(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_callback_connectionstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param callback
-	 *            the callback to set for receiving receipts
-	 */
-	private native void tox_on_connectionstatus(long messengerPointer,
-			OnConnectionStatusCallback callback);
-
-	/**
-	 * Method used to set a callback method for receiving connection status
-	 * changes. Any time a connection status change is received on this tox
-	 * instance, the {@link OnConnectionStatusCallback#execute(int, boolean)}
-	 * method will be executed
-	 * 
-	 * @param callback
-	 *            the callback to set for receiving connection status changes
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setOnConnectionStatusCallback(
-			OnConnectionStatusCallback callback) throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_on_connectionstatus(this.messengerPointer, callback);
-		} finally {
-			this.lock.unlock();
-		}
+		instances.remove(this.instanceNumber);
 	}
 
 	/**
@@ -1472,14 +1230,12 @@ public class JTox {
 	 * @param in
 	 *            the byte array to convert
 	 * @return an UTF-8 String based on the given byte array
-	 * @throws ToxException
-	 *             if the UTF-8 encoding is not supported
 	 */
-	public static String getByteString(byte[] in) throws ToxException {
+	public static String getByteString(byte[] in) {
 		try {
 			return new String(in, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
+			RuntimeException e1 = new RuntimeException("We need UTF-8. Sorry.");
 			e1.initCause(e);
 			throw e1;
 		}
