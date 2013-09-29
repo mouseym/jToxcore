@@ -4,23 +4,12 @@ import im.tox.jtoxcore.JTox;
 import im.tox.jtoxcore.ToxException;
 import im.tox.jtoxcore.callbacks.OnStatusMessageCallback;
 
-public class TestOnStatusMessageCallback extends OnStatusMessageCallback {
-
-	public TestOnStatusMessageCallback(JTox jtox) {
-		super(jtox);
-	}
+public class TestOnStatusMessageCallback implements OnStatusMessageCallback {
 
 	@Override
-	public void execute(int friendnumber, byte[] newstatus) {
-		String status;
-		try {
-			status = JTox.getByteString(newstatus);
-		} catch (ToxException e) {
-			status = "ERROR: Could not get new status message";
-		}
-
+	public void execute(int friendnumber, String newstatus) {
 		System.out.println(friendnumber + " changed their statusmessage to: "
-				+ status);
+				+ newstatus);
 	}
 
 }

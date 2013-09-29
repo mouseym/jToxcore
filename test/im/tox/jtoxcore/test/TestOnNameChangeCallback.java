@@ -4,22 +4,11 @@ import im.tox.jtoxcore.JTox;
 import im.tox.jtoxcore.ToxException;
 import im.tox.jtoxcore.callbacks.OnNameChangeCallback;
 
-public class TestOnNameChangeCallback extends OnNameChangeCallback {
-
-	public TestOnNameChangeCallback(JTox jtox) {
-		super(jtox);
-	}
+public class TestOnNameChangeCallback implements OnNameChangeCallback {
 
 	@Override
-	public void execute(int friendnumber, byte[] newname) {
-		String name;
-		try {
-			name = JTox.getByteString(newname);
-		} catch (ToxException e) {
-			name = "ERROR: Unable to get name";
-		}
-
-		System.out.println(friendnumber + " changed their name to: " + name);
+	public void execute(int friendnumber, String newname) {
+		System.out.println(friendnumber + " changed their name to: " + newname);
 	}
 
 }

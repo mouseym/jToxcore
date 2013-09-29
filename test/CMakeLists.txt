@@ -18,7 +18,7 @@ set(CLEANFILES
         "${CLEANFILES_PATH}/TestOnUserStatusCallback.class"
 )
 
-set(CMAKE_JAVA_INCLUDE_PATH "${PROJECT_BINARY_DIR}/bin/${JAR_TARGET_NAME}-${JTOXCORE_VERSION}.jar")
+set(CMAKE_JAVA_INCLUDE_PATH "${PROJECT_BINARY_DIR}/src/${JAR_TARGET_NAME}-${JTOXCORE_VERSION}.jar")
 set(TEST_SOURCE
 	im/tox/jtoxcore/test/JToxTest.java
         im/tox/jtoxcore/test/TestOnActionCallback.java

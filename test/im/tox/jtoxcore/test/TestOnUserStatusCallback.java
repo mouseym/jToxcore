@@ -4,11 +4,7 @@ import im.tox.jtoxcore.JTox;
 import im.tox.jtoxcore.ToxUserStatus;
 import im.tox.jtoxcore.callbacks.OnUserStatusCallback;
 
-public class TestOnUserStatusCallback extends OnUserStatusCallback {
-
-	public TestOnUserStatusCallback(JTox jtox) {
-		super(jtox);
-	}
+public class TestOnUserStatusCallback implements OnUserStatusCallback {
 
 	@Override
 	public void execute(int friendnumber, ToxUserStatus userstatus) {

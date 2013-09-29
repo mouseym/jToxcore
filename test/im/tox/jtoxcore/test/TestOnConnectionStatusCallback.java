@@ -1,13 +1,8 @@
 package im.tox.jtoxcore.test;
 
-import im.tox.jtoxcore.JTox;
 import im.tox.jtoxcore.callbacks.OnConnectionStatusCallback;
 
-public class TestOnConnectionStatusCallback extends OnConnectionStatusCallback {
-
-	public TestOnConnectionStatusCallback(JTox jtox) {
-		super(jtox);
-	}
+public class TestOnConnectionStatusCallback implements OnConnectionStatusCallback {
 
 	@Override
 	public void execute(int friendnumber, boolean online) {
