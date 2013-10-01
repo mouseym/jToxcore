@@ -75,6 +75,8 @@ public class JTox {
 	 */
 	private final ReentrantLock lock;
 
+	private List<ToxFriend> friends;
+
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
 	 */
@@ -253,18 +255,19 @@ public class JTox {
 			byte[] data, int length);
 
 	/**
-	 * Use this method to add a friend.
+	 * Method used to add a friend. On success, the friend is added to the list
+	 * of friends, and a reference to the friend is returned.
 	 * 
 	 * @param address
 	 *            the address of the friend you want to add
 	 * @param data
 	 *            an optional message you want to send to your friend
-	 * @return the friend's number in this tox instance
+	 * @return the friend
 	 * @throws ToxException
 	 *             if the instance has been killed or an error code is returned
 	 *             by the native tox_addfriend call
 	 */
-	public int addFriend(String address, String data) throws ToxException {
+	public ToxFriend addFriend(String address, String data) throws ToxException {
 		byte[] dataArray = getStringBytes(data);
 		byte[] addressArray = hexToByteArray(address);
 		this.lock.lock();
@@ -280,7 +283,9 @@ public class JTox {
 		}
 
 		if (errcode >= 0) {
-			return errcode;
+			ToxFriend friend = new ToxFriend(errcode);
+			this.friends.add(friend);
+			return friend;
 		} else {
 			throw new ToxException(errcode);
 		}
@@ -300,16 +305,17 @@ public class JTox {
 
 	/**
 	 * Confirm a friend request, or add a friend to your own list without
-	 * sending them a friend request
+	 * sending them a friend request. If successful, the Friend is added to the
+	 * list, and a reference to the friend is returned.
 	 * 
 	 * @param address
 	 *            address of the friend to add
-	 * @return the friend's number
+	 * @return the friend
 	 * @throws ToxException
 	 *             if the instance was killed or an error occurred when adding
 	 *             the friend
 	 */
-	public int confirmRequest(String address) throws ToxException {
+	public ToxFriend confirmRequest(String address) throws ToxException {
 		byte[] addressArray = hexToByteArray(address);
 		this.lock.lock();
 		int errcode;
@@ -323,7 +329,9 @@ public class JTox {
 		}
 
 		if (errcode >= 0) {
-			return errcode;
+			ToxFriend friend = new ToxFriend(errcode);
+			this.friends.add(friend);
+			return friend;
 		} else {
 			throw new ToxException(errcode);
 		}
@@ -386,7 +394,7 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed or the friend does not exist
 	 */
-	public int getFriendId(String clientid) throws ToxException {
+	public ToxFriend getFriend(String clientid) throws ToxException {
 		byte[] clientArray = hexToByteArray(clientid);
 		this.lock.lock();
 		int errcode;
@@ -401,9 +409,8 @@ public class JTox {
 		if (errcode == -1) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
-			return errcode;
+			return this.friends.get(errcode);
 		}
-
 	}
 
 	/**
@@ -1253,6 +1260,7 @@ public class JTox {
 		if (ids == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
+
 			ArrayList<Integer> list = new ArrayList<Integer>();
 			for (int i : ids) {
 				list.add(i);
