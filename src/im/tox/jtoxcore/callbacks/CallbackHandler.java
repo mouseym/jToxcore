@@ -21,7 +21,9 @@
 
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.FriendList;
 import im.tox.jtoxcore.JTox;
+import im.tox.jtoxcore.ToxFriend;
 import im.tox.jtoxcore.ToxUserStatus;
 
 import java.util.ArrayList;
@@ -33,40 +35,49 @@ import java.util.List;
  * JTox instance.
  * 
  * @author sonOfRa
+ * @param <F>
+ *            Friend type to use with the CallbackHandler instance
  * 
  */
-public class CallbackHandler {
+public class CallbackHandler<F extends ToxFriend> {
 
-	private List<OnActionCallback> onActionCallbacks;
-	private List<OnConnectionStatusCallback> onConnectionStatusCallbacks;
+	private List<OnActionCallback<F>> onActionCallbacks;
+	private List<OnConnectionStatusCallback<F>> onConnectionStatusCallbacks;
 	private List<OnFriendRequestCallback> onFriendRequestCallbacks;
-	private List<OnMessageCallback> onMessageCallbacks;
-	private List<OnNameChangeCallback> onNameChangeCallbacks;
-	private List<OnReadReceiptCallback> onReadReceiptCallbacks;
-	private List<OnStatusMessageCallback> onStatusMessageCallbacks;
-	private List<OnUserStatusCallback> onUserStatusCallbacks;
+	private List<OnMessageCallback<F>> onMessageCallbacks;
+	private List<OnNameChangeCallback<F>> onNameChangeCallbacks;
+	private List<OnReadReceiptCallback<F>> onReadReceiptCallbacks;
+	private List<OnStatusMessageCallback<F>> onStatusMessageCallbacks;
+	private List<OnUserStatusCallback<F>> onUserStatusCallbacks;
+
+	private FriendList<F> friendlist;
 
 	/**
 	 * Default constructor for CallbackHandler. Initializes all Lists as
 	 * synchronized lists.
+	 * 
+	 * @param friendlist
+	 *            the friendlist of the jtox instance that this handler is
+	 *            attached to
 	 */
-	public CallbackHandler() {
+	public CallbackHandler(FriendList<F> friendlist) {
+		this.friendlist = friendlist;
 		this.onActionCallbacks = Collections
-				.synchronizedList(new ArrayList<OnActionCallback>());
+				.synchronizedList(new ArrayList<OnActionCallback<F>>());
 		this.onConnectionStatusCallbacks = Collections
-				.synchronizedList(new ArrayList<OnConnectionStatusCallback>());
+				.synchronizedList(new ArrayList<OnConnectionStatusCallback<F>>());
 		this.onFriendRequestCallbacks = Collections
 				.synchronizedList(new ArrayList<OnFriendRequestCallback>());
 		this.onMessageCallbacks = Collections
-				.synchronizedList(new ArrayList<OnMessageCallback>());
+				.synchronizedList(new ArrayList<OnMessageCallback<F>>());
 		this.onNameChangeCallbacks = Collections
-				.synchronizedList(new ArrayList<OnNameChangeCallback>());
+				.synchronizedList(new ArrayList<OnNameChangeCallback<F>>());
 		this.onReadReceiptCallbacks = Collections
-				.synchronizedList(new ArrayList<OnReadReceiptCallback>());
+				.synchronizedList(new ArrayList<OnReadReceiptCallback<F>>());
 		this.onStatusMessageCallbacks = Collections
-				.synchronizedList(new ArrayList<OnStatusMessageCallback>());
+				.synchronizedList(new ArrayList<OnStatusMessageCallback<F>>());
 		this.onUserStatusCallbacks = Collections
-				.synchronizedList(new ArrayList<OnUserStatusCallback>());
+				.synchronizedList(new ArrayList<OnUserStatusCallback<F>>());
 	}
 
 	/**
@@ -80,9 +91,10 @@ public class CallbackHandler {
 	@SuppressWarnings("unused")
 	private void onAction(int friendnumber, byte[] action) {
 		String actionString = JTox.getByteString(action);
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onActionCallbacks) {
-			for (OnActionCallback callback : this.onActionCallbacks) {
-				callback.execute(friendnumber, actionString);
+			for (OnActionCallback<F> callback : this.onActionCallbacks) {
+				callback.execute(friend, actionString);
 			}
 		}
 	}
@@ -93,7 +105,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            the callback to register
 	 */
-	public void registerOnActionCallback(OnActionCallback callback) {
+	public void registerOnActionCallback(OnActionCallback<F> callback) {
 		this.onActionCallbacks.add(callback);
 	}
 
@@ -103,7 +115,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            the callback to remove
 	 */
-	public void unregisterOnActionCallback(OnActionCallback callback) {
+	public void unregisterOnActionCallback(OnActionCallback<F> callback) {
 		this.onActionCallbacks.remove(callback);
 	}
 
@@ -121,7 +133,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnActionCallback> void registerOnActionCallbacks(
+	public <T extends OnActionCallback<F>> void registerOnActionCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnActionCallback(callback);
@@ -135,7 +147,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnActionCallback> void setOnActionCallbacks(
+	public <T extends OnActionCallback<F>> void setOnActionCallbacks(
 			List<T> callbacks) {
 		clearOnActionCallbacks();
 		registerOnActionCallbacks(callbacks);
@@ -151,9 +163,10 @@ public class CallbackHandler {
 	 */
 	@SuppressWarnings("unused")
 	private void onConnectionStatus(int friendnumber, boolean online) {
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onConnectionStatusCallbacks) {
-			for (OnConnectionStatusCallback cb : this.onConnectionStatusCallbacks) {
-				cb.execute(friendnumber, online);
+			for (OnConnectionStatusCallback<F> cb : this.onConnectionStatusCallbacks) {
+				cb.execute(friend, online);
 			}
 		}
 	}
@@ -165,7 +178,7 @@ public class CallbackHandler {
 	 *            the callback to register
 	 */
 	public void registerOnConnectionStatusCallback(
-			OnConnectionStatusCallback callback) {
+			OnConnectionStatusCallback<F> callback) {
 		this.onConnectionStatusCallbacks.add(callback);
 	}
 
@@ -176,7 +189,7 @@ public class CallbackHandler {
 	 *            the callback to remove
 	 */
 	public void unregisterOnConnectionStatusCallback(
-			OnConnectionStatusCallback callback) {
+			OnConnectionStatusCallback<F> callback) {
 		this.onConnectionStatusCallbacks.remove(callback);
 	}
 
@@ -194,7 +207,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnConnectionStatusCallback> void registerOnConnectionStatusCallbacks(
+	public <T extends OnConnectionStatusCallback<F>> void registerOnConnectionStatusCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnConnectionStatusCallback(callback);
@@ -208,9 +221,10 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnConnectionStatusCallback> void setOnConnectionStatusCallbacks(
+	public <T extends OnConnectionStatusCallback<F>> void setOnConnectionStatusCallbacks(
 			List<T> callbacks) {
-
+		clearOnConnectionStatusCallbacks();
+		registerOnConnectionStatusCallbacks(callbacks);
 	}
 
 	/**
@@ -294,10 +308,11 @@ public class CallbackHandler {
 	 */
 	@SuppressWarnings("unused")
 	private void onMessage(int friendnumber, byte[] message) {
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		String messageString = JTox.getByteString(message);
 		synchronized (this.onMessageCallbacks) {
-			for (OnMessageCallback cb : this.onMessageCallbacks) {
-				cb.execute(friendnumber, messageString);
+			for (OnMessageCallback<F> cb : this.onMessageCallbacks) {
+				cb.execute(friend, messageString);
 			}
 		}
 	}
@@ -308,7 +323,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to add
 	 */
-	public void registerOnMessageCallback(OnMessageCallback callback) {
+	public void registerOnMessageCallback(OnMessageCallback<F> callback) {
 		this.onMessageCallbacks.add(callback);
 	}
 
@@ -318,7 +333,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to remove
 	 */
-	public void unregisterOnMessageCallback(OnMessageCallback callback) {
+	public void unregisterOnMessageCallback(OnMessageCallback<F> callback) {
 		this.onMessageCallbacks.remove(callback);
 	}
 
@@ -335,7 +350,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnMessageCallback> void registerOnMessageCallbacks(
+	public <T extends OnMessageCallback<F>> void registerOnMessageCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnMessageCallback(callback);
@@ -348,7 +363,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnMessageCallback> void setOnMessageCallbacks(
+	public <T extends OnMessageCallback<F>> void setOnMessageCallbacks(
 			List<T> callbacks) {
 		clearOnMessageCallbacks();
 		registerOnMessageCallbacks(callbacks);
@@ -364,10 +379,11 @@ public class CallbackHandler {
 	 */
 	@SuppressWarnings("unused")
 	private void onNameChange(int friendnumber, byte[] newname) {
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		String newnameString = JTox.getByteString(newname);
 		synchronized (this.onNameChangeCallbacks) {
-			for (OnNameChangeCallback cb : this.onNameChangeCallbacks) {
-				cb.execute(friendnumber, newnameString);
+			for (OnNameChangeCallback<F> cb : this.onNameChangeCallbacks) {
+				cb.execute(friend, newnameString);
 			}
 		}
 	}
@@ -378,7 +394,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to add
 	 */
-	public void registerOnNameChangeCallback(OnNameChangeCallback callback) {
+	public void registerOnNameChangeCallback(OnNameChangeCallback<F> callback) {
 		this.onNameChangeCallbacks.add(callback);
 	}
 
@@ -388,7 +404,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to remove
 	 */
-	public void unregisterOnNameChangeCallback(OnNameChangeCallback callback) {
+	public void unregisterOnNameChangeCallback(OnNameChangeCallback<F> callback) {
 		this.onNameChangeCallbacks.remove(callback);
 	}
 
@@ -405,7 +421,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnNameChangeCallback> void addOnNameChangeCallbacks(
+	public <T extends OnNameChangeCallback<F>> void addOnNameChangeCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnNameChangeCallback(callback);
@@ -418,7 +434,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnNameChangeCallback> void setOnNameChangeCallbacks(
+	public <T extends OnNameChangeCallback<F>> void setOnNameChangeCallbacks(
 			List<T> callbacks) {
 		clearOnNameChangeCallbacks();
 		addOnNameChangeCallbacks(callbacks);
@@ -434,9 +450,10 @@ public class CallbackHandler {
 	 */
 	@SuppressWarnings("unused")
 	private void onReadReceipt(int friendnumber, int receipt) {
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onReadReceiptCallbacks) {
-			for (OnReadReceiptCallback cb : this.onReadReceiptCallbacks) {
-				cb.execute(friendnumber, receipt);
+			for (OnReadReceiptCallback<F> cb : this.onReadReceiptCallbacks) {
+				cb.execute(friend, receipt);
 			}
 		}
 	}
@@ -447,7 +464,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to add
 	 */
-	public void registerOnReadReceiptCallback(OnReadReceiptCallback callback) {
+	public void registerOnReadReceiptCallback(OnReadReceiptCallback<F> callback) {
 		this.onReadReceiptCallbacks.add(callback);
 	}
 
@@ -457,7 +474,8 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to remove
 	 */
-	public void unregisterOnReadReceiptCallback(OnReadReceiptCallback callback) {
+	public void unregisterOnReadReceiptCallback(
+			OnReadReceiptCallback<F> callback) {
 		this.onReadReceiptCallbacks.remove(callback);
 	}
 
@@ -474,7 +492,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnReadReceiptCallback> void registerOnReadReceiptCallbacks(
+	public <T extends OnReadReceiptCallback<F>> void registerOnReadReceiptCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnReadReceiptCallback(callback);
@@ -487,7 +505,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnReadReceiptCallback> void setOnReadReceiptcallbacks(
+	public <T extends OnReadReceiptCallback<F>> void setOnReadReceiptcallbacks(
 			List<T> callbacks) {
 		clearOnReadReceiptCallbacks();
 		registerOnReadReceiptCallbacks(callbacks);
@@ -504,9 +522,10 @@ public class CallbackHandler {
 	@SuppressWarnings("unused")
 	private void onStatusMessage(int friendnumber, byte[] statusmessage) {
 		String newStatus = JTox.getByteString(statusmessage);
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onStatusMessageCallbacks) {
-			for (OnStatusMessageCallback cb : this.onStatusMessageCallbacks) {
-				cb.execute(friendnumber, newStatus);
+			for (OnStatusMessageCallback<F> cb : this.onStatusMessageCallbacks) {
+				cb.execute(friend, newStatus);
 			}
 		}
 	}
@@ -517,7 +536,8 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to add
 	 */
-	public void registerOnStatusMessageCallback(OnStatusMessageCallback callback) {
+	public void registerOnStatusMessageCallback(
+			OnStatusMessageCallback<F> callback) {
 		this.onStatusMessageCallbacks.add(callback);
 	}
 
@@ -528,7 +548,7 @@ public class CallbackHandler {
 	 *            callback to remove
 	 */
 	public void unregisterOnStatusMessageCallback(
-			OnStatusMessageCallback callback) {
+			OnStatusMessageCallback<F> callback) {
 		this.onStatusMessageCallbacks.remove(callback);
 	}
 
@@ -545,7 +565,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnStatusMessageCallback> void registerOnStatusMessageCallbacks(
+	public <T extends OnStatusMessageCallback<F>> void registerOnStatusMessageCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnStatusMessageCallback(callback);
@@ -558,7 +578,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnStatusMessageCallback> void setOnStatusMessageCallbacks(
+	public <T extends OnStatusMessageCallback<F>> void setOnStatusMessageCallbacks(
 			List<T> callbacks) {
 		clearOnStatusMessageCallbacks();
 		registerOnStatusMessageCallbacks(callbacks);
@@ -574,9 +594,10 @@ public class CallbackHandler {
 	 */
 	@SuppressWarnings("unused")
 	private void onUserStatus(int friendnumber, ToxUserStatus status) {
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onUserStatusCallbacks) {
-			for (OnUserStatusCallback cb : this.onUserStatusCallbacks) {
-				cb.execute(friendnumber, status);
+			for (OnUserStatusCallback<F> cb : this.onUserStatusCallbacks) {
+				cb.execute(friend, status);
 			}
 		}
 	}
@@ -587,7 +608,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to add
 	 */
-	public void registerOnUserStatusCallback(OnUserStatusCallback callback) {
+	public void registerOnUserStatusCallback(OnUserStatusCallback<F> callback) {
 		this.onUserStatusCallbacks.add(callback);
 	}
 
@@ -597,7 +618,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            callback to remove
 	 */
-	public void unregisterOnUserStatusCallbacks(OnUserStatusCallback callback) {
+	public void unregisterOnUserStatusCallbacks(OnUserStatusCallback<F> callback) {
 		this.onUserStatusCallbacks.remove(callback);
 	}
 
@@ -614,7 +635,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnUserStatusCallback> void registerOnUserStatusCallbacks(
+	public <T extends OnUserStatusCallback<F>> void registerOnUserStatusCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnUserStatusCallback(callback);
@@ -627,7 +648,7 @@ public class CallbackHandler {
 	 * 
 	 * @param callbacks
 	 */
-	public <T extends OnUserStatusCallback> void setOnUserStatusCallbacks(
+	public <T extends OnUserStatusCallback<F>> void setOnUserStatusCallbacks(
 			List<T> callbacks) {
 		clearOnUserStatusCallbacks();
 		registerOnUserStatusCallbacks(callbacks);

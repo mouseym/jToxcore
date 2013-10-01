@@ -70,5 +70,13 @@ public enum ToxError {
 	/**
 	 * An invalid port was specified (not in range 0-65535)
 	 */
-	TOX_INVALID_PORT;
+	TOX_INVALID_PORT,
+	/**
+	 * A friend with the specified friendnumber already exists
+	 */
+	TOX_FRIEND_EXISTS,
+	/**
+	 * Attempted to set our own status to "invalid"
+	 */
+	TOX_STATUS_INVALID;
 }

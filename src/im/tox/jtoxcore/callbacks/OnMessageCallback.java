@@ -20,21 +20,24 @@
  */
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.ToxFriend;
+
 /**
  * Callback class for receiving messages
  * 
  * @author sonOfRa
- * 
+ * @param <F>
+ *            Friend type to use with the OnMessageCallback instance
  */
-public interface OnMessageCallback {
+public interface OnMessageCallback<F extends ToxFriend> {
 
 	/**
 	 * Method to be executed each time a message is received
 	 * 
-	 * @param friendnumber
+	 * @param friend
 	 *            the friend who sent the message
 	 * @param message
 	 *            the message
 	 */
-	public abstract void execute(int friendnumber, String message);
+	void execute(F friend, String message);
 }
