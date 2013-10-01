@@ -28,7 +28,7 @@ import java.util.List;
  * @author sonOfRa
  * 
  */
-public interface FriendList extends Iterable<ToxFriend> {
+public interface FriendList<F extends ToxFriend> {
 
 	/**
 	 * Retrieve a friend from the list by its number
@@ -38,7 +38,7 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return the first friend in the list with the specified friendnumber.
 	 *         Null if no such friend exists.
 	 */
-	public ToxFriend getByFriendNumber(int friendnumber);
+	F getByFriendNumber(int friendnumber);
 
 	/**
 	 * Retrieve a friend by its client id.
@@ -48,7 +48,7 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return the first friend in the list with the specified client id. Null
 	 *         if no such friend exists.
 	 */
-	public ToxFriend getById(String id);
+	F getById(String id);
 
 	/**
 	 * Retrieve all friends with the specified name
@@ -61,7 +61,7 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return a list containing all friends with the specified name. If no
 	 *         results are found, an empty List is returned.
 	 */
-	public List<ToxFriend> getByName(String name, boolean ignorecase);
+	List<F> getByName(String name, boolean ignorecase);
 
 	/**
 	 * Retrieve all friends with the specified nickname
@@ -73,7 +73,7 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return a List containing all friends with the specified nickname. If no
 	 *         results are found, an empty List is returned.
 	 */
-	public List<ToxFriend> getByNickname(String nickname, boolean ignorecase);
+	List<F> getByNickname(String nickname, boolean ignorecase);
 
 	/**
 	 * Retrieve all Friends that have the content of partial inside of their
@@ -84,7 +84,7 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return a List containing all friends that match the partial String. If
 	 *         no results are found, an empty List is returned.
 	 */
-	public List<ToxFriend> searchFriend(String partial);
+	List<F> searchFriend(String partial);
 
 	/**
 	 * Get all friends that are currently online and have the specified status.
@@ -94,15 +94,15 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return a List containing all friends with the specified status. If no
 	 *         friends have that status, an empty List is returned.
 	 */
-	public List<ToxFriend> getByStatus(ToxUserStatus status);
+	List<F> getByStatus(ToxUserStatus status);
 
 	/**
 	 * Get all currently online friends
 	 * 
 	 * @return a List containing all online friends. If no friends are online,
-	 *         an empty List is returned
+	 *         an empty List is returned.
 	 */
-	public List<ToxFriend> getOnlineFriends();
+	List<F> getOnlineFriends();
 
 	/**
 	 * Get all currently offline friends
@@ -110,5 +110,31 @@ public interface FriendList extends Iterable<ToxFriend> {
 	 * @return a List containing all offline friends. If no friends are offline,
 	 *         an empty List is returned.
 	 */
-	public List<ToxFriend> getOfflineFriends();
+	List<F> getOfflineFriends();
+
+	/**
+	 * Get all friends
+	 * 
+	 * @return a List containing all friends. If there are no friends, an empty
+	 *         List is returned.
+	 */
+	List<F> all();
+
+	/**
+	 * Add the specified friend to the list.
+	 * 
+	 * @param friend
+	 *            the new friend
+	 * @throws FriendExistsException
+	 *             if a friend with that friendnumber already exists.
+	 */
+	void addFriend(F friend) throws FriendExistsException;
+
+	/**
+	 * Remove the friend associated with that friendnumber
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber to remove
+	 */
+	void removeFriend(int friendnumber);
 }

@@ -40,7 +40,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * 
  */
 public class JTox {
-
+	//TODO Friend list handling
 	/**
 	 * Maximum length of a status message in Bytes. Non-ASCII characters take
 	 * multiple Bytes.
@@ -68,7 +68,8 @@ public class JTox {
 	private static int instanceCounter = 0;
 	private final int instanceNumber;
 
-	private CallbackHandler handler;
+	private CallbackHandler<?> handler;
+	private FriendList<?> friendList;
 
 	/**
 	 * This field contains the lock used for thread safety
@@ -164,9 +165,6 @@ public class JTox {
 	 * @return byte array representation of the hexadecimal String
 	 */
 	public static byte[] hexToByteArray(String in) {
-		if (in.length() % 2 != 0) {
-			throw new IllegalArgumentException();
-		}
 		int length = in.length() / 2;
 		byte[] out = new byte[length];
 		for (int i = 0; i < length; i += 2) {
@@ -190,24 +188,9 @@ public class JTox {
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
-	public JTox() throws ToxException {
-		this(new CallbackHandler());
-	}
-
-	/**
-	 * Creates a new instance of JTox with the specified {@link CallbackHandler}
-	 * and stores the pointer to the internal struct in messengerPointer.
-	 * <p>
-	 * If you add a new Callback to a Handler that is used by more than one JTox
-	 * instance, the new callback will be executed by ALL JTox instances using
-	 * this handler.
-	 * 
-	 * @param handler
-	 *            the {@link CallbackHandler} to use
-	 * @throws ToxException
-	 *             when the native call indicates an error
-	 */
-	public JTox(CallbackHandler handler) throws ToxException {
+	public JTox(FriendList<?> friendList, CallbackHandler<?> handler)
+			throws ToxException {
+		this.friendList = friendList;
 		this.handler = handler;
 		long pointer = tox_new();
 		if (pointer == 0) {
@@ -233,8 +216,9 @@ public class JTox {
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
-	public JTox(byte[] data) throws ToxException {
-		this();
+	public JTox(byte[] data, FriendList<?> friendList,
+			CallbackHandler<?> handler) throws ToxException {
+		this(friendList, handler);
 		this.load(data);
 	}
 

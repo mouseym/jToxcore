@@ -29,13 +29,13 @@ package im.tox.jtoxcore;
  */
 public class ToxFriend {
 
-	private String id;
-	private String name;
-	private String nickname;
-	private String statusMessage;
-	private ToxUserStatus status;
-	private boolean online;
-	private final int friendnumber;
+	protected String id;
+	protected String name;
+	protected String nickname;
+	protected String statusMessage;
+	protected ToxUserStatus status;
+	protected boolean online;
+	protected final int friendnumber;
 
 	/**
 	 * Default constructor for ToxFriends

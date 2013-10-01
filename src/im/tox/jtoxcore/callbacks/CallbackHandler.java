@@ -21,7 +21,9 @@
 
 package im.tox.jtoxcore.callbacks;
 
+import im.tox.jtoxcore.FriendList;
 import im.tox.jtoxcore.JTox;
+import im.tox.jtoxcore.ToxFriend;
 import im.tox.jtoxcore.ToxUserStatus;
 
 import java.util.ArrayList;
@@ -35,9 +37,10 @@ import java.util.List;
  * @author sonOfRa
  * 
  */
-public class CallbackHandler {
-
-	private List<OnActionCallback> onActionCallbacks;
+public class CallbackHandler<F extends ToxFriend> {
+	//TODO Refactor Callbacks to take friends as arguments
+	//TODO Introduce Generics into callbacks
+	private List<OnActionCallback<F>> onActionCallbacks;
 	private List<OnConnectionStatusCallback> onConnectionStatusCallbacks;
 	private List<OnFriendRequestCallback> onFriendRequestCallbacks;
 	private List<OnMessageCallback> onMessageCallbacks;
@@ -46,13 +49,20 @@ public class CallbackHandler {
 	private List<OnStatusMessageCallback> onStatusMessageCallbacks;
 	private List<OnUserStatusCallback> onUserStatusCallbacks;
 
+	private FriendList<F> friendlist;
+
 	/**
 	 * Default constructor for CallbackHandler. Initializes all Lists as
 	 * synchronized lists.
+	 * 
+	 * @param friendlist
+	 *            the friendlist of the jtox instance that this handler is
+	 *            attached to
 	 */
-	public CallbackHandler() {
+	public CallbackHandler(FriendList<F> friendlist) {
+		this.friendlist = friendlist;
 		this.onActionCallbacks = Collections
-				.synchronizedList(new ArrayList<OnActionCallback>());
+				.synchronizedList(new ArrayList<OnActionCallback<F>>());
 		this.onConnectionStatusCallbacks = Collections
 				.synchronizedList(new ArrayList<OnConnectionStatusCallback>());
 		this.onFriendRequestCallbacks = Collections
@@ -80,9 +90,10 @@ public class CallbackHandler {
 	@SuppressWarnings("unused")
 	private void onAction(int friendnumber, byte[] action) {
 		String actionString = JTox.getByteString(action);
+		F friend = this.friendlist.getByFriendNumber(friendnumber);
 		synchronized (this.onActionCallbacks) {
-			for (OnActionCallback callback : this.onActionCallbacks) {
-				callback.execute(friendnumber, actionString);
+			for (OnActionCallback<F> callback : this.onActionCallbacks) {
+				callback.execute(friend, actionString);
 			}
 		}
 	}
@@ -93,7 +104,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            the callback to register
 	 */
-	public void registerOnActionCallback(OnActionCallback callback) {
+	public void registerOnActionCallback(OnActionCallback<F> callback) {
 		this.onActionCallbacks.add(callback);
 	}
 
@@ -103,7 +114,7 @@ public class CallbackHandler {
 	 * @param callback
 	 *            the callback to remove
 	 */
-	public void unregisterOnActionCallback(OnActionCallback callback) {
+	public void unregisterOnActionCallback(OnActionCallback<F> callback) {
 		this.onActionCallbacks.remove(callback);
 	}
 
@@ -121,7 +132,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to add
 	 */
-	public <T extends OnActionCallback> void registerOnActionCallbacks(
+	public <T extends OnActionCallback<F>> void registerOnActionCallbacks(
 			List<T> callbacks) {
 		for (T callback : callbacks) {
 			registerOnActionCallback(callback);
@@ -135,7 +146,7 @@ public class CallbackHandler {
 	 * @param callbacks
 	 *            callbacks to set
 	 */
-	public <T extends OnActionCallback> void setOnActionCallbacks(
+	public <T extends OnActionCallback<F>> void setOnActionCallbacks(
 			List<T> callbacks) {
 		clearOnActionCallbacks();
 		registerOnActionCallbacks(callbacks);
@@ -210,7 +221,8 @@ public class CallbackHandler {
 	 */
 	public <T extends OnConnectionStatusCallback> void setOnConnectionStatusCallbacks(
 			List<T> callbacks) {
-
+		clearOnConnectionStatusCallbacks();
+		registerOnConnectionStatusCallbacks(callbacks);
 	}
 
 	/**
