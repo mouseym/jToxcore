@@ -107,15 +107,14 @@ public class JTox<F extends ToxFriend> {
 		long pointer = tox_new();
 		if (pointer == 0) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			this.messengerPointer = pointer;
-			this.lock = new ReentrantLock();
-			validPointers.add(pointer);
-			instanceLock.lock();
-			this.instanceNumber = instanceCounter++;
-			instances.put(instanceCounter, this);
-			instanceLock.unlock();
 		}
+		this.messengerPointer = pointer;
+		this.lock = new ReentrantLock();
+		validPointers.add(pointer);
+		instanceLock.lock();
+		this.instanceNumber = instanceCounter++;
+		instances.put(instanceCounter, this);
+		instanceLock.unlock();
 	}
 
 	/**
@@ -271,9 +270,8 @@ public class JTox<F extends ToxFriend> {
 
 		if (name == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return name;
 		}
+		return name;
 
 	}
 
@@ -406,9 +404,8 @@ public class JTox<F extends ToxFriend> {
 		if (errcode >= 0) {
 			F f = this.friendList.addFriend(errcode);
 			return f;
-		} else {
-			throw new ToxException(errcode);
 		}
+		throw new ToxException(errcode);
 	}
 
 	/**
@@ -454,9 +451,8 @@ public class JTox<F extends ToxFriend> {
 		if (errcode >= 0) {
 			F friend = this.friendList.addFriend(errcode);
 			return friend;
-		} else {
-			throw new ToxException(errcode);
 		}
+		throw new ToxException(errcode);
 	}
 
 	/**
@@ -536,10 +532,9 @@ public class JTox<F extends ToxFriend> {
 
 		if (result == 0) {
 			throw new ToxException(ToxError.TOX_SEND_FAILED);
-		} else {
-			friend.getSentMessages().add(result);
-			return result;
 		}
+		friend.getSentMessages().add(result);
+		return result;
 
 	}
 
@@ -594,10 +589,9 @@ public class JTox<F extends ToxFriend> {
 
 		if (result == 0) {
 			throw new ToxException(ToxError.TOX_SEND_FAILED);
-		} else {
-			friend.getSentMessages().add(result);
-			return result;
 		}
+		friend.getSentMessages().add(result);
+		return result;
 	}
 
 	/**
@@ -781,11 +775,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_isconnected(this.messengerPointer) == 0) {
-				return false;
-			} else {
-				return true;
-			}
+			return tox_isconnected(this.messengerPointer) != 0;
 		} finally {
 			this.lock.unlock();
 		}
@@ -932,13 +922,12 @@ public class JTox<F extends ToxFriend> {
 
 		if (ids == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			ArrayList<Integer> list = new ArrayList<Integer>();
-			for (int i : ids) {
-				list.add(i);
-			}
-			return list;
 		}
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		for (int i : ids) {
+			list.add(i);
+		}
+		return list;
 	}
 
 	/**
@@ -1013,10 +1002,9 @@ public class JTox<F extends ToxFriend> {
 
 		if (name == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			this.friendList.getByFriendNumber(friendnumber).setName(
-					getByteString(name));
 		}
+		this.friendList.getByFriendNumber(friendnumber).setName(
+				getByteString(name));
 	}
 
 	/**
@@ -1053,10 +1041,9 @@ public class JTox<F extends ToxFriend> {
 
 		if (status == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			this.friendList.getByFriendNumber(friendnumber).setStatusMessage(
-					getByteString(status));
 		}
+		this.friendList.getByFriendNumber(friendnumber).setStatusMessage(
+				getByteString(status));
 	}
 
 	/**
