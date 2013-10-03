@@ -1093,6 +1093,70 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
+	 * Update the connection status if a connection status callback is invoked
+	 * 
+	 * @param friendnumber
+	 *            friend's number
+	 * @param status
+	 *            new status (true if online, false if offline)
+	 */
+	private void onConnectionStatus(int friendnumber, boolean status) {
+		this.friendList.getByFriendNumber(friendnumber).setOnline(status);
+	}
+
+	/**
+	 * Update the name if a connection status callback is invoked
+	 * 
+	 * @param friendnumber
+	 *            friend's number
+	 * @param newname
+	 *            new name
+	 */
+	private void onNameChange(int friendnumber, byte[] newname) {
+		this.friendList.getByFriendNumber(friendnumber).setName(
+				getByteString(newname));
+	}
+
+	/**
+	 * Add the read receipt to delivered messages if a receipt callback is
+	 * invoked
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @param receipt
+	 *            the receipt
+	 */
+	private void onReadReceipt(int friendnumber, int receipt) {
+		this.friendList.getByFriendNumber(friendnumber).getDeliveredMessages()
+				.add(receipt);
+	}
+
+	/**
+	 * Update the status message if a status message callback is invoked
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @param newMessage
+	 *            the new status message
+	 */
+	private void onStatusMessage(int friendnumber, byte[] newMessage) {
+		this.friendList.getByFriendNumber(friendnumber).setStatusMessage(
+				getByteString(newMessage));
+	}
+
+	/**
+	 * Update the user status if a user status callback is invoked
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @param newStatus
+	 *            the new status
+	 */
+	private void onUserStatus(int friendnumber, ToxUserStatus newStatus) {
+		this.friendList.getByFriendNumber(friendnumber).setStatus(newStatus);
+	}
+
+	/**
 	 * Utility method that checks the current pointer and throws an exception if
 	 * it is not valid
 	 * 
