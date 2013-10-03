@@ -1,3 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: ${JAR_TARGET_NAME}-${JTOXCORE_VERSION}.jar
-Main-Class: im/tox/jtoxcore/test/JToxTest

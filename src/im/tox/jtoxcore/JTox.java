@@ -270,8 +270,9 @@ public class JTox<F extends ToxFriend> {
 
 		if (name == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			return name;
 		}
-		return name;
 
 	}
 
@@ -884,7 +885,7 @@ public class JTox<F extends ToxFriend> {
 	 *             if the instance was killed, or an internal error occured
 	 */
 	public void refreshList() throws ToxException {
-		for (int i : getFriendList()) {
+		for (int i : getInternalFriendList()) {
 			this.friendList.addFriendIfNotExists(i);
 			getClientId(i);
 			getName(i);
@@ -909,7 +910,7 @@ public class JTox<F extends ToxFriend> {
 	 * @throws ToxException
 	 *             if the instance was killed, or the list was not retrieved
 	 */
-	private ArrayList<Integer> getFriendList() throws ToxException {
+	private ArrayList<Integer> getInternalFriendList() throws ToxException {
 		this.lock.lock();
 		int[] ids;
 		try {
@@ -1166,6 +1167,13 @@ public class JTox<F extends ToxFriend> {
 	 */
 	public int getInstanceNumber() {
 		return this.instanceNumber;
+	}
+
+	/**
+	 * @return the friendlist
+	 */
+	public FriendList<F> getFriendList() {
+		return this.friendList;
 	}
 
 	/**

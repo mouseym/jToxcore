@@ -37,8 +37,5 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=~/myWin64Toolchain -DJNI_H=~/include/win64/jni -
 If the jni_md.h header is in the same directory as the jni.h header, you can safely pass only ```JNI_H```, and add ```NEED_JNI_MD=n```. When CMake completes, you can generate the output files with ```make``` as described above.
 
 
-## Building the testing client ##
-In order to enable the testing client, pass this option to cmake: ```BUILD_TESTCLIENT=y```
-
 ## Building javadoc ##
 In order to build javadoc for the jToxcore library, pass this option to cmake: ```BUILD_JAVADOC=y```
