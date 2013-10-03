@@ -28,8 +28,8 @@ import java.util.List;
  * Bean for a friend in Tox. Provides all the basic information about a Friend
  * instance. Also offers an optional nickname field per friend.
  * <p>
- * Please not that the nickname field is not a field that is internal to the tox
- * API. If you want this field to be persistent and still available after
+ * Please note that the nickname field is not a field that is internal to the
+ * tox API. If you want this field to be persistent and still available after
  * saving/loading, you will have to persist it to your own storage and take care
  * of loading it correctly at runtime. All other fields are automatically
  * populated when using the
@@ -41,14 +41,49 @@ import java.util.List;
  */
 public class ToxFriend {
 
+	/**
+	 * Hexadecimal client id of the friend
+	 */
 	protected String id;
+
+	/**
+	 * The friend's name
+	 */
 	protected String name;
+
+	/**
+	 * The friend's nickname.
+	 */
 	protected String nickname;
-	protected String statusMessage;
-	protected ToxUserStatus status;
-	protected boolean online;
+
+	/**
+	 * The friend's status message
+	 */
+	protected transient String statusMessage;
+
+	/**
+	 * The friend's current status
+	 */
+	protected transient ToxUserStatus status;
+
+	/**
+	 * The friend's online/offline status
+	 */
+	protected transient boolean online;
+
+	/**
+	 * The friend's friend number
+	 */
 	protected final int friendnumber;
+
+	/**
+	 * Message IDs for messages sent to this friend
+	 */
 	protected transient List<Integer> sentMessages;
+
+	/**
+	 * Message IDs for messages successfully delivered to this friend
+	 */
 	protected transient List<Integer> deliveredMessages;
 
 	/**
@@ -57,7 +92,7 @@ public class ToxFriend {
 	 * @param friendnumber
 	 *            the friendnumber of the created friend
 	 */
-	protected ToxFriend(int friendnumber) {
+	public ToxFriend(int friendnumber) {
 		this.friendnumber = friendnumber;
 		this.status = ToxUserStatus.TOX_USERSTATUS_NONE;
 		this.online = false;
