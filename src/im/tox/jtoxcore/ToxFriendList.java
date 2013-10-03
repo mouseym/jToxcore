@@ -16,14 +16,13 @@ public class ToxFriendList implements FriendList<ToxFriend> {
 	/**
 	 * Underlying friend list
 	 */
-	private ArrayList<ToxFriend> friends;
+	private List<ToxFriend> friends;
 
 	/**
 	 * Create a new, empty ToxFriendList instance
 	 */
 	public ToxFriendList() {
-		this.friends = (ArrayList<ToxFriend>) Collections
-				.synchronizedList(new ArrayList<ToxFriend>());
+		this.friends = Collections.synchronizedList(new ArrayList<ToxFriend>());
 	}
 
 	/**
@@ -159,7 +158,7 @@ public class ToxFriendList implements FriendList<ToxFriend> {
 		final ArrayList<ToxFriend> result = new ArrayList<ToxFriend>();
 		synchronized (this.friends) {
 			for (ToxFriend f : ToxFriendList.this.friends) {
-				if (f.getStatus() == status) {
+				if (f.isOnline() && f.getStatus() == status) {
 					result.add(f);
 				}
 			}
@@ -199,15 +198,18 @@ public class ToxFriendList implements FriendList<ToxFriend> {
 	}
 
 	@Override
-	public void addFriend(ToxFriend friend) throws FriendExistsException {
+	public ToxFriend addFriend(int friendnumber) throws FriendExistsException {
+		ToxFriend friend;
 		synchronized (this.friends) {
 			for (ToxFriend f : this.friends) {
-				if (f.getFriendnumber() == friend.getFriendnumber()) {
+				if (f.getFriendnumber() == friendnumber) {
 					throw new FriendExistsException(f.getFriendnumber());
 				}
 			}
+			friend = new ToxFriend(friendnumber);
 			this.friends.add(friend);
 		}
+		return friend;
 	}
 
 	@Override

@@ -37,10 +37,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * methods for everything in the public API provided by tox.h
  * 
  * @author sonOfRa
- * 
+ * @param <F>
+ *            Friend type for this JTox instance
  */
-public class JTox {
-	//TODO Friend list handling
+public class JTox<F extends ToxFriend> {
+
 	/**
 	 * Maximum length of a status message in Bytes. Non-ASCII characters take
 	 * multiple Bytes.
@@ -63,20 +64,18 @@ public class JTox {
 	private static List<Long> validPointers = Collections
 			.synchronizedList(new ArrayList<Long>());
 
-	private static Map<Integer, JTox> instances = new HashMap<Integer, JTox>();
+	private static Map<Integer, JTox<?>> instances = new HashMap<Integer, JTox<?>>();
 	private static ReentrantLock instanceLock = new ReentrantLock();
 	private static int instanceCounter = 0;
 	private final int instanceNumber;
 
-	private CallbackHandler<?> handler;
-	private FriendList<?> friendList;
+	private CallbackHandler<F> handler;
+	private FriendList<F> friendList;
 
 	/**
 	 * This field contains the lock used for thread safety
 	 */
 	private final ReentrantLock lock;
-
-	private List<ToxFriend> friends;
 
 	/**
 	 * This field contains the pointer used in all native tox_ method calls.
@@ -116,7 +115,7 @@ public class JTox {
 	 * @param instancenumber
 	 * @return the associated instance
 	 */
-	public static JTox getInstance(int instancenumber) {
+	public static JTox<?> getInstance(int instancenumber) {
 		return instances.get(instancenumber);
 	}
 
@@ -127,16 +126,12 @@ public class JTox {
 	 * @param in
 	 *            the String to convert
 	 * @return a byte array
-	 * @throws ToxException
-	 *             if the UTF-8 encoding is not supported
 	 */
-	public static byte[] getStringBytes(String in) throws ToxException {
+	public static byte[] getStringBytes(String in)  {
 		try {
 			return in.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			ToxException e1 = new ToxException(ToxError.TOX_UNKNOWN);
-			e1.initCause(e);
-			throw e1;
+			throw new InternalError("UTF-8 support is needed to continue.");
 		}
 	}
 
@@ -151,9 +146,7 @@ public class JTox {
 		try {
 			return new String(in, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			RuntimeException e1 = new RuntimeException("We need UTF-8. Sorry.");
-			e1.initCause(e);
-			throw e1;
+			throw new InternalError("UTF-8 support is needed to continue.");
 		}
 	}
 
@@ -185,10 +178,14 @@ public class JTox {
 	 * Creates a new instance of JTox and stores the pointer to the internal
 	 * struct in messengerPointer.
 	 * 
+	 * @param friendList
+	 *            the friendlist to use with this instance
+	 * @param handler
+	 *            the callback handler for this instance
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
-	public JTox(FriendList<?> friendList, CallbackHandler<?> handler)
+	public JTox(FriendList<F> friendList, CallbackHandler<F> handler)
 			throws ToxException {
 		this.friendList = friendList;
 		this.handler = handler;
@@ -213,11 +210,15 @@ public class JTox {
 	 * 
 	 * @param data
 	 *            the data to load for the new tox instance
+	 * @param friendList
+	 *            friend list to use with this tox instance
+	 * @param handler
+	 *            callback handler to use with this instance
 	 * @throws ToxException
 	 *             when the native call indicates an error
 	 */
-	public JTox(byte[] data, FriendList<?> friendList,
-			CallbackHandler<?> handler) throws ToxException {
+	public JTox(byte[] data, FriendList<F> friendList,
+			CallbackHandler<F> handler) throws ToxException {
 		this(friendList, handler);
 		this.load(data);
 	}
@@ -250,8 +251,11 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed or an error code is returned
 	 *             by the native tox_addfriend call
+	 * @throws FriendExistsException
+	 *             if the friend already exists
 	 */
-	public ToxFriend addFriend(String address, String data) throws ToxException {
+	public F addFriend(String address, String data) throws ToxException,
+			FriendExistsException {
 		byte[] dataArray = getStringBytes(data);
 		byte[] addressArray = hexToByteArray(address);
 		this.lock.lock();
@@ -267,9 +271,8 @@ public class JTox {
 		}
 
 		if (errcode >= 0) {
-			ToxFriend friend = new ToxFriend(errcode);
-			this.friends.add(friend);
-			return friend;
+			F f = this.friendList.addFriend(errcode);
+			return f;
 		} else {
 			throw new ToxException(errcode);
 		}
@@ -298,8 +301,11 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance was killed or an error occurred when adding
 	 *             the friend
+	 * @throws FriendExistsException
+	 *             if the friend already exists
 	 */
-	public ToxFriend confirmRequest(String address) throws ToxException {
+	public F confirmRequest(String address) throws ToxException,
+			FriendExistsException {
 		byte[] addressArray = hexToByteArray(address);
 		this.lock.lock();
 		int errcode;
@@ -313,8 +319,7 @@ public class JTox {
 		}
 
 		if (errcode >= 0) {
-			ToxFriend friend = new ToxFriend(errcode);
-			this.friends.add(friend);
+			F friend = this.friendList.addFriend(errcode);
 			return friend;
 		} else {
 			throw new ToxException(errcode);
@@ -378,7 +383,7 @@ public class JTox {
 	 * @throws ToxException
 	 *             if the instance has been killed or the friend does not exist
 	 */
-	public ToxFriend getFriend(String clientid) throws ToxException {
+	public F getFriend(String clientid) throws ToxException {
 		byte[] clientArray = hexToByteArray(clientid);
 		this.lock.lock();
 		int errcode;
@@ -393,7 +398,7 @@ public class JTox {
 		if (errcode == -1) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
-			return this.friends.get(errcode);
+			return this.friendList.getByFriendNumber(errcode);
 		}
 	}
 
@@ -413,20 +418,21 @@ public class JTox {
 	 * Get the client id for a given Friend, and update that friends friend ID
 	 * to the returned value
 	 * 
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @return client id for the given friend
 	 * @throws ToxException
 	 *             if the instance has been killed, or an error occurred when
 	 *             attempting to fetch the client id
 	 */
-	public String getClientId(int friendnumber) throws ToxException {
+	public String getClientId(F friend) throws ToxException {
 		this.lock.lock();
 		String result;
 		try {
 			checkPointer();
 
-			result = tox_getclient_id(this.messengerPointer, friendnumber);
+			result = tox_getclient_id(this.messengerPointer,
+					friend.getFriendnumber());
 		} finally {
 			this.lock.unlock();
 		}
@@ -434,6 +440,8 @@ public class JTox {
 		if (result == null || result.equals("")) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
+			this.friendList.getByFriendNumber(friend.friendnumber)
+					.setId(result);
 			return result;
 		}
 	}
@@ -607,6 +615,7 @@ public class JTox {
 		} finally {
 			this.lock.unlock();
 		}
+		this.friendList.removeFriend(friendnumber);
 	}
 
 	/**
@@ -626,27 +635,27 @@ public class JTox {
 			byte[] message, int length);
 
 	/**
-	 * Sends a message to the specified friend
+	 * Sends a message to the specified friend. Add the message ID of the sent
+	 * message to the list of sent messages of the receiving friend.
 	 * 
-	 * @param friendnumber
-	 *            the friend's number
+	 * @param friend
+	 *            the friend
 	 * @param message
 	 *            the message
-	 * @return the message ID of the sent message. If you want to receive read
-	 *         receipts, hang on to this value.
+	 * @return the message ID of the sent message. This is stored in the
+	 *         Friend's list of sent messages.
 	 * @throws ToxException
 	 *             if the instance has been killed or the message was not sent
 	 */
-	public int sendMessage(int friendnumber, String message)
-			throws ToxException {
+	public int sendMessage(F friend, String message) throws ToxException {
 		this.lock.lock();
 		byte[] messageArray = getStringBytes(message);
 		int result;
 		try {
 			checkPointer();
 
-			result = tox_sendmessage(this.messengerPointer, friendnumber,
-					messageArray, messageArray.length);
+			result = tox_sendmessage(this.messengerPointer,
+					friend.getFriendnumber(), messageArray, messageArray.length);
 		} finally {
 			this.lock.unlock();
 		}

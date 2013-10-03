@@ -26,6 +26,8 @@ import im.tox.jtoxcore.ToxFriend;
  * Callback class for receiving actions from friends
  * 
  * @author sonOfRa
+ * @param <F>
+ *            Friend type to use with the OnActionCallback instance
  * 
  */
 public interface OnActionCallback<F extends ToxFriend> {
@@ -38,5 +40,5 @@ public interface OnActionCallback<F extends ToxFriend> {
 	 * @param action
 	 *            content of the action
 	 */
-	public abstract void execute(F friend, String action);
+	void execute(F friend, String action);
 }

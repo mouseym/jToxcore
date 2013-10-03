@@ -20,9 +20,19 @@
  */
 package im.tox.jtoxcore;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Bean for a friend in Tox. Provides all the basic information about a Friend
  * instance. Also offers an optional nickname field per friend.
+ * <p>
+ * Please not that the nickname field is not a field that is internal to the tox
+ * API. If you want this field to be persistent and still available after
+ * saving/loading, you will have to persist it to your own storage and take care
+ * of loading it correctly at runtime. All other fields are automatically
+ * populated when using the {@link JTox#load(byte[])} method.
  * 
  * @author sonOfRa
  * 
@@ -36,6 +46,8 @@ public class ToxFriend {
 	protected ToxUserStatus status;
 	protected boolean online;
 	protected final int friendnumber;
+	protected transient List<Integer> sentMessages;
+	protected transient List<Integer> deliveredMessages;
 
 	/**
 	 * Default constructor for ToxFriends
@@ -47,6 +59,10 @@ public class ToxFriend {
 		this.friendnumber = friendnumber;
 		this.status = ToxUserStatus.TOX_USERSTATUS_NONE;
 		this.online = false;
+		this.sentMessages = Collections
+				.synchronizedList(new ArrayList<Integer>());
+		this.deliveredMessages = Collections
+				.synchronizedList(new ArrayList<Integer>());
 	}
 
 	/**
@@ -96,6 +112,20 @@ public class ToxFriend {
 	 */
 	public int getFriendnumber() {
 		return this.friendnumber;
+	}
+
+	/**
+	 * @return the IDs for sent messages
+	 */
+	public List<Integer> getSentMessages() {
+		return this.sentMessages;
+	}
+
+	/**
+	 * @return the IDs of sent messages for which we received a read receipt
+	 */
+	public List<Integer> getDeliveredMessages() {
+		return this.deliveredMessages;
 	}
 
 	/**

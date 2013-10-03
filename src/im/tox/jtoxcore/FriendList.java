@@ -26,6 +26,8 @@ import java.util.List;
  * Interface definition for a Tox Friendlist implementation
  * 
  * @author sonOfRa
+ * @param <F>
+ *            Friend type to use with the FriendList instance
  * 
  */
 public interface FriendList<F extends ToxFriend> {
@@ -121,14 +123,15 @@ public interface FriendList<F extends ToxFriend> {
 	List<F> all();
 
 	/**
-	 * Add the specified friend to the list.
+	 * Create the new friend and add it to the list
 	 * 
-	 * @param friend
+	 * @param friendnumber
 	 *            the new friend
+	 * @return the newly created friend
 	 * @throws FriendExistsException
 	 *             if a friend with that friendnumber already exists.
 	 */
-	void addFriend(F friend) throws FriendExistsException;
+	F addFriend(int friendnumber) throws FriendExistsException;
 
 	/**
 	 * Remove the friend associated with that friendnumber

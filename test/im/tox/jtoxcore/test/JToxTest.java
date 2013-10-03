@@ -13,9 +13,15 @@ public class JToxTest {
 	public static void main(String[] args) throws UnknownHostException,
 			ToxException {
 		ToxFriendList friendList = new ToxFriendList();
-		CallbackHandler<ToxFriend> handler = new CallbackHandler<ToxFriend>(friendList);
+		CallbackHandler<ToxFriend> handler = new CallbackHandler<ToxFriend>(
+				friendList);
 
-		JTox jtox = new JTox(friendList, handler);
+		JTox<ToxFriend> jtox = new JTox<ToxFriend>(friendList, handler);
+		@SuppressWarnings("unchecked")
+		JTox<ToxFriend> jj = (JTox<ToxFriend>) JTox.getInstance(1);
+
+		jj.bootstrap("54.215.145.71", 33445,
+				"6EDDEE2188EF579303C0766B4796DCBA89C93058B6032FEA51593DCD42FB746C");
 		jtox.bootstrap("54.215.145.71", 33445,
 				"6EDDEE2188EF579303C0766B4796DCBA89C93058B6032FEA51593DCD42FB746C ");
 		System.out.println(jtox.getAddress());

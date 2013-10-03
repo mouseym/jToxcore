@@ -31,11 +31,13 @@ package im.tox.jtoxcore;
  * thus terminating the Thread this Worker is running in.
  * 
  * @author sonOfRa
+ * @param <F>
+ *            friend type that is used with the JTox instance held by this class
  * 
  */
-public class ToxWorker implements Runnable {
+public class ToxWorker<F extends ToxFriend> implements Runnable {
 
-	private JTox instance;
+	private JTox<F> instance;
 	private int sleeptime;
 
 	/**
@@ -44,7 +46,7 @@ public class ToxWorker implements Runnable {
 	 * @param instance
 	 *            the JTox instance to work on
 	 */
-	public ToxWorker(JTox instance) {
+	public ToxWorker(JTox<F> instance) {
 		this.instance = instance;
 		this.sleeptime = 1000 / 20;
 	}
@@ -59,7 +61,7 @@ public class ToxWorker implements Runnable {
 	 * @param frequency
 	 *            the frequency (in Hz)
 	 */
-	public ToxWorker(JTox instance, int frequency) {
+	public ToxWorker(JTox<F> instance, int frequency) {
 		this.instance = instance;
 		this.sleeptime = 1000 / frequency >= 20 ? frequency : 20;
 	}
