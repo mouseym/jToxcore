@@ -16,6 +16,9 @@ set(CLEANFILES
         "${CLASSDIR}/im/tox/jtoxcore/ToxException.class"
         "${CLASSDIR}/im/tox/jtoxcore/ToxUserStatus.class"
         "${CLASSDIR}/im/tox/jtoxcore/ToxWorker.class"
+	"${CLASSDIR}/im/tox/jtoxcore/FriendExistsException.class"
+	"${CLASSDIR}/im/tox/jtoxcore/FriendList.class"
+	"${CLASSDIR}/im/tox/jtoxcore/ToxFriend.class"
 	"${CLASSDIR}/im/tox/jtoxcore/callbacks/OnActionCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnConnectionStatusCallback.class"
         "${CLASSDIR}/im/tox/jtoxcore/callbacks/OnMessageCallback.class"
@@ -36,6 +39,9 @@ set(JTOX_CORE
 	im/tox/jtoxcore/ToxException.java
 	im/tox/jtoxcore/ToxUserStatus.java
 	im/tox/jtoxcore/ToxWorker.java
+	im/tox/jtoxcore/FriendExistsException.java
+	im/tox/jtoxcore/FriendList.java
+	im/tox/jtoxcore/ToxFriend.java
 )
 
 # Callback source files
