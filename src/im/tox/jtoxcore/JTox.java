@@ -83,91 +83,6 @@ public class JTox<F extends ToxFriend> {
 	private final long messengerPointer;
 
 	/**
-	 * Utility method that checks the current pointer and throws an exception if
-	 * it is not valid
-	 * 
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	private void checkPointer() throws ToxException {
-		if (!validPointers.contains(this.messengerPointer)) {
-			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
-		}
-	}
-
-	/**
-	 * If you need to pass a JTox instance around between different contexts,
-	 * and are unable to pass instances directly, use this method to acquire the
-	 * instance number of this instance. Once acquired, you can acquire the
-	 * instance with {@link JTox#getInstance(int)}.
-	 * 
-	 * @return the instance number
-	 */
-	public int getInstanceNumber() {
-		return this.instanceNumber;
-	}
-
-	/**
-	 * Get the instance associated with the specified instance number. This may
-	 * return <code>null</code> if either the instance was killed, or if no
-	 * instance with that number exists.
-	 * 
-	 * @param instancenumber
-	 * @return the associated instance
-	 */
-	public static JTox<?> getInstance(int instancenumber) {
-		return instances.get(instancenumber);
-	}
-
-	/**
-	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
-	 * a nullbyte at the end for convenience
-	 * 
-	 * @param in
-	 *            the String to convert
-	 * @return a byte array
-	 */
-	public static byte[] getStringBytes(String in)  {
-		try {
-			return in.getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new InternalError("UTF-8 support is needed to continue.");
-		}
-	}
-
-	/**
-	 * Turns the given byte array into a UTF-8 encoded string
-	 * 
-	 * @param in
-	 *            the byte array to convert
-	 * @return an UTF-8 String based on the given byte array
-	 */
-	public static String getByteString(byte[] in) {
-		try {
-			return new String(in, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new InternalError("UTF-8 support is needed to continue.");
-		}
-	}
-
-	/**
-	 * Convert a given hexadecimal String to a byte array.
-	 * 
-	 * @param in
-	 *            String to convert
-	 * @return byte array representation of the hexadecimal String
-	 */
-	public static byte[] hexToByteArray(String in) {
-		int length = in.length() / 2;
-		byte[] out = new byte[length];
-		for (int i = 0; i < length; i += 2) {
-			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
-					.digit(in.charAt(i + 1), 16));
-		}
-		return out;
-	}
-
-	/**
 	 * Native call to tox_new
 	 * 
 	 * @return the pointer to the messenger struct on success, 0 on failure
@@ -221,6 +136,224 @@ public class JTox<F extends ToxFriend> {
 			CallbackHandler<F> handler) throws ToxException {
 		this(friendList, handler);
 		this.load(data);
+	}
+
+	/**
+	 * Native call to tox_getaddress
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct.
+	 * 
+	 * @return the client's address on success, null on failure
+	 */
+	private native String tox_getaddress(long messengerPointer);
+
+	/**
+	 * Get our own address
+	 * 
+	 * @return our client's address
+	 * @throws ToxException
+	 *             when the instance has been killed or an error occurred when
+	 *             trying to get our address
+	 */
+	public String getAddress() throws ToxException {
+		this.lock.lock();
+		String address;
+		try {
+			checkPointer();
+			address = tox_getaddress(this.messengerPointer);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (address == null || address.equals("")) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			return address;
+		}
+	}
+
+	/**
+	 * Native call to tox_get_selfuserstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return our current status
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	private native ToxUserStatus tox_get_selfuserstatus(long messengerPointer);
+
+	/**
+	 * Get our own current status
+	 * 
+	 * @return one of {@link ToxUserStatus}
+	 * @throws ToxException
+	 */
+	public ToxUserStatus getSelfUserStatus() throws ToxException {
+		this.lock.lock();
+		try {
+			checkPointer();
+
+			return tox_get_selfuserstatus(this.messengerPointer);
+		} finally {
+			this.lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_set_statusmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param message
+	 *            our new status message
+	 * @param length
+	 *            the length of the new status message in bytes
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_set_statusmessage(long messengerPointer,
+			byte[] message, int length);
+
+	/**
+	 * Sets our status message
+	 * 
+	 * @param message
+	 *            our new status message
+	 * @throws ToxException
+	 *             if the instance has been killed, the message was too long, or
+	 *             another error occurred
+	 */
+	public void setStatusMessage(String message) throws ToxException {
+		this.lock.lock();
+		byte[] messageArray = getStringBytes(message);
+		if (messageArray.length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
+			throw new ToxException(ToxError.TOX_TOOLONG);
+		}
+		try {
+			checkPointer();
+
+			if (tox_set_statusmessage(this.messengerPointer, messageArray,
+					messageArray.length)) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
+		} finally {
+			this.lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_getselfname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @return our name
+	 */
+	private native String tox_getselfname(long messengerPointer);
+
+	/**
+	 * Function to get our current name
+	 * 
+	 * @return our name
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public String getSelfName() throws ToxException {
+		this.lock.lock();
+		String name;
+		try {
+			checkPointer();
+
+			name = tox_getselfname(this.messengerPointer);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (name == null) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			return name;
+		}
+
+	}
+
+	/**
+	 * Native call to tox_setname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param newname
+	 *            the new name
+	 * @param length
+	 *            length of the new name in byte
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_setname(long messengerPointer, byte[] newname,
+			int length);
+
+	/**
+	 * Sets our nickname
+	 * 
+	 * @param newname
+	 *            the new name to set. Maximum length is 128 bytes. This means
+	 *            that a name containing UTF-8 characters has a shorter
+	 *            character limit than one only using ASCII.
+	 * @throws ToxException
+	 *             if the instance was killed, the name was too long, or another
+	 *             error occurred
+	 */
+	public void setName(String newname) throws ToxException {
+		this.lock.lock();
+		byte[] newnameArray = getStringBytes(newname);
+		if (newnameArray.length >= TOX_MAX_NICKNAME_LENGTH) {
+			throw new ToxException(ToxError.TOX_TOOLONG);
+		}
+		try {
+			checkPointer();
+
+			if (tox_setname(this.messengerPointer, newnameArray,
+					newnameArray.length)) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
+		} finally {
+			this.lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_set_userstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param status
+	 *            status to set
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_set_userstatus(long messengerPointer, int status);
+
+	/**
+	 * Set our current {@link ToxUserStatus}.
+	 * 
+	 * @param status
+	 *            the status to set
+	 * @throws ToxException
+	 *             if the instance was killed, we tried to set our status to
+	 *             invalid, or an error occurred while setting status
+	 */
+	public void setUserStatus(ToxUserStatus status) throws ToxException {
+		if (status == ToxUserStatus.TOX_USERSTATUS_INVALID) {
+			throw new ToxException(ToxError.TOX_STATUS_INVALID);
+		}
+		this.lock.lock();
+		try {
+			checkPointer();
+
+			if (tox_set_userstatus(this.messengerPointer, status.ordinal())) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
+		} finally {
+			this.lock.unlock();
+		}
 	}
 
 	/**
@@ -327,122 +460,225 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_getaddress
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct.
-	 * 
-	 * @return the client's address on success, null on failure
-	 */
-	private native String tox_getaddress(long messengerPointer);
-
-	/**
-	 * Get our own address
-	 * 
-	 * @return our client's address
-	 * @throws ToxException
-	 *             when the instance has been killed or an error occurred when
-	 *             trying to get our address
-	 */
-	public String getAddress() throws ToxException {
-		this.lock.lock();
-		String address;
-		try {
-			checkPointer();
-			address = tox_getaddress(this.messengerPointer);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (address == null || address.equals("")) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return address;
-		}
-	}
-
-	/**
-	 * Native call to tox_getfriend_id
-	 * 
-	 * @param clientid
-	 *            the friend's public key
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @return the local id of the specified friend, or -1 if friend does not
-	 *         exist
-	 */
-	private native int tox_getfriend_id(long messengerPointer, byte[] clientid);
-
-	/**
-	 * Returns the local id of a friend given a public key. Throws an exception
-	 * in case the specified friend does not exist
-	 * 
-	 * @param clientid
-	 *            the friend's public key
-	 * @return the local id of the specified friend
-	 * @throws ToxException
-	 *             if the instance has been killed or the friend does not exist
-	 */
-	public F getFriend(String clientid) throws ToxException {
-		byte[] clientArray = hexToByteArray(clientid);
-		this.lock.lock();
-		int errcode;
-		try {
-			checkPointer();
-
-			errcode = tox_getfriend_id(this.messengerPointer, clientArray);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (errcode == -1) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return this.friendList.getByFriendNumber(errcode);
-		}
-	}
-
-	/**
-	 * Native call to tox_getclient_id
+	 * Native call to tox_delfriend
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
 	 * @param friendnumber
-	 *            local number of the friend
-	 * @return the public key of the specified friend
+	 *            the number of the friend
+	 * @return false on success, true on failure
 	 */
-	private native String tox_getclient_id(long messengerPointer,
-			int friendnumber);
+	private native boolean tox_delfriend(long messengerPointer, int friendnumber);
 
 	/**
-	 * Get the client id for a given Friend, and update that friends friend ID
-	 * to the returned value
+	 * Method used to delete a friend
 	 * 
-	 * @param friend
-	 *            the friend
-	 * @return client id for the given friend
+	 * @param friendnumber
+	 *            the friend to delete
 	 * @throws ToxException
-	 *             if the instance has been killed, or an error occurred when
-	 *             attempting to fetch the client id
+	 *             if the instance has been killed or an error occurred
 	 */
-	public String getClientId(F friend) throws ToxException {
+	public void deleteFriend(int friendnumber) throws ToxException {
 		this.lock.lock();
-		String result;
 		try {
 			checkPointer();
 
-			result = tox_getclient_id(this.messengerPointer,
-					friend.getFriendnumber());
+			if (tox_delfriend(this.messengerPointer, friendnumber)) {
+				throw new ToxException(ToxError.TOX_UNKNOWN);
+			}
+		} finally {
+			this.lock.unlock();
+		}
+		this.friendList.removeFriend(friendnumber);
+	}
+
+	/**
+	 * Native call to tox_sendmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @param length
+	 *            length of the message in bytes
+	 * @return the message ID on success, 0 on failure
+	 */
+	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+			byte[] message, int length);
+
+	/**
+	 * Sends a message to the specified friend. Add the message ID of the sent
+	 * message to the list of sent messages of the receiving friend.
+	 * 
+	 * @param friend
+	 *            the friend
+	 * @param message
+	 *            the message
+	 * @return the message ID of the sent message. This is stored in the
+	 *         Friend's list of sent messages.
+	 * @throws ToxException
+	 *             if the instance has been killed or the message was not sent
+	 */
+	public int sendMessage(F friend, String message) throws ToxException {
+		this.lock.lock();
+		byte[] messageArray = getStringBytes(message);
+		int result;
+		try {
+			checkPointer();
+
+			result = tox_sendmessage(this.messengerPointer,
+					friend.getFriendnumber(), messageArray, messageArray.length);
 		} finally {
 			this.lock.unlock();
 		}
 
-		if (result == null || result.equals("")) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
+		if (result == 0) {
+			throw new ToxException(ToxError.TOX_SEND_FAILED);
 		} else {
-			this.friendList.getByFriendNumber(friend.friendnumber)
-					.setId(result);
+			friend.getSentMessages().add(result);
 			return result;
+		}
+
+	}
+
+	/**
+	 * Native call to tox_sendmessage_withid
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param message
+	 *            the message
+	 * @param length
+	 *            length of the message in bytes
+	 * 
+	 * @param messageID
+	 *            the message ID to use
+	 * @return the message ID on success, 0 on failure
+	 */
+	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+			byte[] message, int length, int messageID);
+
+	/**
+	 * Sends a message to the specified friend, with a specified ID
+	 * 
+	 * @param friend
+	 *            the friend
+	 * @param message
+	 *            the message
+	 * @param messageID
+	 *            the message ID to use
+	 * @return the message ID of the sent message. If you want to receive read
+	 *         receipts, hang on to this value.
+	 * @throws ToxException
+	 *             if the instance has been killed or the message was not sent.
+	 */
+	public int sendMessage(F friend, String message, int messageID)
+			throws ToxException {
+		byte[] messageArray = getStringBytes(message);
+		this.lock.lock();
+		int result;
+		try {
+			checkPointer();
+
+			result = tox_sendmessage(this.messengerPointer,
+					friend.getFriendnumber(), messageArray,
+					messageArray.length, messageID);
+
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (result == 0) {
+			throw new ToxException(ToxError.TOX_SEND_FAILED);
+		} else {
+			friend.getSentMessages().add(result);
+			return result;
+		}
+	}
+
+	/**
+	 * Native call to tox_sendaction
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the number of the friend
+	 * @param action
+	 *            the action to send
+	 * @param length
+	 *            length of the action in bytes
+	 * @return false on success, true on failure
+	 */
+	private native boolean tox_sendaction(long messengerPointer,
+			int friendnumber, byte[] action, int length);
+
+	/**
+	 * Sends an IRC-like /me-action to a friend
+	 * 
+	 * @param friend
+	 *            the friend
+	 * @param action
+	 *            the action
+	 * @throws ToxException
+	 *             if the instance has been killed or the send failed
+	 */
+	public void sendAction(F friend, String action) throws ToxException {
+		this.lock.lock();
+		byte[] actionArray = getStringBytes(action);
+		try {
+			checkPointer();
+
+			if (tox_sendaction(this.messengerPointer, friend.getFriendnumber(),
+					actionArray, actionArray.length)) {
+				throw new ToxException(ToxError.TOX_SEND_FAILED);
+			}
+		} finally {
+			this.lock.unlock();
+		}
+	}
+
+	/**
+	 * Native call to tox_sends_receipts
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param sendReceipts
+	 *            <code>true</code> to send receipts, <code>false</code>
+	 *            otherwise
+	 * @param friendnumber
+	 *            the friend's number
+	 */
+	private native void tox_set_sends_receipts(long messengerPointer,
+			boolean sendReceipts, int friendnumber);
+
+	/**
+	 * Set whether or not to send read receipts to the originator of a message
+	 * once we received a message. This defaults to <code>true</code>, and must
+	 * be disabled manually for each friend, if not required
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * 
+	 * @param sendReceipts
+	 *            <code>true</code> to send receipts, <code>false</code>
+	 *            otherwise
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	public void setSendReceipts(int friendnumber, boolean sendReceipts)
+			throws ToxException {
+		this.lock.lock();
+		try {
+			checkPointer();
+
+			tox_set_sends_receipts(this.messengerPointer, sendReceipts,
+					friendnumber);
+		} finally {
+			this.lock.unlock();
 		}
 	}
 
@@ -586,580 +822,6 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_delfriend
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @return false on success, true on failure
-	 */
-	private native boolean tox_delfriend(long messengerPointer, int friendnumber);
-
-	/**
-	 * Method used to delete a friend
-	 * 
-	 * @param friendnumber
-	 *            the friend to delete
-	 * @throws ToxException
-	 *             if the instance has been killed or an error occurred
-	 */
-	public void deleteFriend(int friendnumber) throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			if (tox_delfriend(this.messengerPointer, friendnumber)) {
-				throw new ToxException(ToxError.TOX_UNKNOWN);
-			}
-		} finally {
-			this.lock.unlock();
-		}
-		this.friendList.removeFriend(friendnumber);
-	}
-
-	/**
-	 * Native call to tox_sendmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @param message
-	 *            the message
-	 * @param length
-	 *            length of the message in bytes
-	 * @return the message ID on success, 0 on failure
-	 */
-	private native int tox_sendmessage(long messengerPointer, int friendnumber,
-			byte[] message, int length);
-
-	/**
-	 * Sends a message to the specified friend. Add the message ID of the sent
-	 * message to the list of sent messages of the receiving friend.
-	 * 
-	 * @param friend
-	 *            the friend
-	 * @param message
-	 *            the message
-	 * @return the message ID of the sent message. This is stored in the
-	 *         Friend's list of sent messages.
-	 * @throws ToxException
-	 *             if the instance has been killed or the message was not sent
-	 */
-	public int sendMessage(F friend, String message) throws ToxException {
-		this.lock.lock();
-		byte[] messageArray = getStringBytes(message);
-		int result;
-		try {
-			checkPointer();
-
-			result = tox_sendmessage(this.messengerPointer,
-					friend.getFriendnumber(), messageArray, messageArray.length);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (result == 0) {
-			throw new ToxException(ToxError.TOX_SEND_FAILED);
-		} else {
-			return result;
-		}
-
-	}
-
-	/**
-	 * Native call to tox_sendmessage_withid
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @param message
-	 *            the message
-	 * @param length
-	 *            length of the message in bytes
-	 * 
-	 * @param messageID
-	 *            the message ID to use
-	 * @return the message ID on success, 0 on failure
-	 */
-	private native int tox_sendmessage(long messengerPointer, int friendnumber,
-			byte[] message, int length, int messageID);
-
-	/**
-	 * Sends a message to the specified friend, with a specified ID
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @param message
-	 *            the message
-	 * @param messageID
-	 *            the message ID to use
-	 * @return the message ID of the sent message. If you want to receive read
-	 *         receipts, hang on to this value.
-	 * @throws ToxException
-	 *             if the instance has been killed or the message was not sent.
-	 */
-	public int sendMessage(int friendnumber, String message, int messageID)
-			throws ToxException {
-		byte[] messageArray = getStringBytes(message);
-		this.lock.lock();
-		int result;
-		try {
-			checkPointer();
-
-			result = tox_sendmessage(this.messengerPointer, friendnumber,
-					messageArray, messageArray.length, messageID);
-
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (result == 0) {
-			throw new ToxException(ToxError.TOX_SEND_FAILED);
-		} else {
-			return result;
-		}
-	}
-
-	/**
-	 * Native call to tox_setname
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param newname
-	 *            the new name
-	 * @param length
-	 *            length of the new name in byte
-	 * @return false on success, true on failure
-	 */
-	private native boolean tox_setname(long messengerPointer, byte[] newname,
-			int length);
-
-	/**
-	 * Sets our nickname
-	 * 
-	 * @param newname
-	 *            the new name to set. Maximum length is 128 bytes. This means
-	 *            that a name containing UTF-8 characters has a shorter
-	 *            character limit than one only using ASCII.
-	 * @throws ToxException
-	 *             if the instance was killed, the name was too long, or another
-	 *             error occurred
-	 */
-	public void setName(String newname) throws ToxException {
-		this.lock.lock();
-		byte[] newnameArray = getStringBytes(newname);
-		if (newnameArray.length >= TOX_MAX_NICKNAME_LENGTH) {
-			throw new ToxException(ToxError.TOX_TOOLONG);
-		}
-		try {
-			checkPointer();
-
-			if (tox_setname(this.messengerPointer, newnameArray,
-					newnameArray.length)) {
-				throw new ToxException(ToxError.TOX_UNKNOWN);
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_sendaction
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the number of the friend
-	 * @param action
-	 *            the action to send
-	 * @param length
-	 *            length of the action in bytes
-	 * @return false on success, true on failure
-	 */
-	private native boolean tox_sendaction(long messengerPointer,
-			int friendnumber, byte[] action, int length);
-
-	/**
-	 * Sends an IRC-like /me-action to a friend
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @param action
-	 *            the action
-	 * @throws ToxException
-	 *             if the instance has been killed or the send failed
-	 */
-	public void sendAction(int friendnumber, String action) throws ToxException {
-		this.lock.lock();
-		byte[] actionArray = getStringBytes(action);
-		try {
-			checkPointer();
-
-			if (tox_sendaction(this.messengerPointer, friendnumber,
-					actionArray, actionArray.length)) {
-				throw new ToxException(ToxError.TOX_SEND_FAILED);
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_getselfname
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @return our name
-	 */
-	private native String tox_getselfname(long messengerPointer);
-
-	/**
-	 * Function to get our current name
-	 * 
-	 * @return our name
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public String getSelfName() throws ToxException {
-		this.lock.lock();
-		String name;
-		try {
-			checkPointer();
-
-			name = tox_getselfname(this.messengerPointer);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (name == null) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return name;
-		}
-
-	}
-
-	/**
-	 * Native call to tox_set_statusmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param message
-	 *            our new status message
-	 * @param length
-	 *            the length of the new status message in bytes
-	 * @return false on success, true on failure
-	 */
-	private native boolean tox_set_statusmessage(long messengerPointer,
-			byte[] message, int length);
-
-	/**
-	 * Sets our status message
-	 * 
-	 * @param message
-	 *            our new status message
-	 * @throws ToxException
-	 *             if the instance has been killed, the message was too long, or
-	 *             another error occurred
-	 */
-	public void setStatusMessage(String message) throws ToxException {
-		this.lock.lock();
-		byte[] messageArray = getStringBytes(message);
-		if (messageArray.length >= TOX_MAX_STATUSMESSAGE_LENGTH) {
-			throw new ToxException(ToxError.TOX_TOOLONG);
-		}
-		try {
-			checkPointer();
-
-			if (tox_set_statusmessage(this.messengerPointer, messageArray,
-					messageArray.length)) {
-				throw new ToxException(ToxError.TOX_UNKNOWN);
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_getname
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the specified friend's name
-	 */
-	private native byte[] tox_getname(long messengerPointer, int friendnumber);
-
-	/**
-	 * Get the specified friend's name
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the friend's name
-	 * @throws ToxException
-	 *             if the instance has been killed or an error occurred
-	 */
-	public String getName(int friendnumber) throws ToxException {
-		this.lock.lock();
-		byte[] name;
-		try {
-			checkPointer();
-
-			name = tox_getname(this.messengerPointer, friendnumber);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (name == null) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return getByteString(name);
-		}
-	}
-
-	/**
-	 * Native call to tox_set_userstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param status
-	 *            status to set
-	 * @return false on success, true on failure
-	 */
-	private native boolean tox_set_userstatus(long messengerPointer, int status);
-
-	/**
-	 * Set our current {@link ToxUserStatus}.
-	 * 
-	 * @param status
-	 *            the status to set
-	 * @throws ToxException
-	 *             if the instance was killed, or an error occurred while stting
-	 *             status
-	 */
-	public void setUserStatus(ToxUserStatus status) throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			if (tox_set_userstatus(this.messengerPointer, status.ordinal())) {
-				throw new ToxException(ToxError.TOX_UNKNOWN);
-			}
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_copy_statusmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the status message
-	 */
-	private native byte[] tox_getstatusmessage(long messengerPointer,
-			int friendnumber);
-
-	/**
-	 * Get the friend's status message
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the friend's status message
-	 * @throws ToxException
-	 *             if the instance has been killed, or an error occurred while
-	 *             getting the status message
-	 */
-	public String getStatusMessage(int friendnumber) throws ToxException {
-		this.lock.lock();
-		byte[] status;
-		try {
-			checkPointer();
-
-			status = tox_getstatusmessage(this.messengerPointer, friendnumber);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (status == null) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return getByteString(status);
-		}
-	}
-
-	/**
-	 * Native call to tox_friendexists
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return true if friend exists, false otherwise
-	 */
-	private native boolean tox_friendexists(long messengerPointer,
-			int friendnumber);
-
-	/**
-	 * Check if the specified friend exists
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return true if friend exists, false otherwise
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public boolean friendExists(int friendnumber) throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			return tox_friendexists(this.messengerPointer, friendnumber);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_copy_self_statusmessage
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @return our current status message
-	 */
-	private native byte[] tox_getselfstatusmessage(long messengerPointer);
-
-	/**
-	 * Gets our own status message
-	 * 
-	 * @return our current status message
-	 * @throws ToxException
-	 */
-	public String getStatusMessage() throws ToxException {
-		this.lock.lock();
-		byte[] message;
-		try {
-			checkPointer();
-
-			message = tox_getselfstatusmessage(this.messengerPointer);
-		} finally {
-			this.lock.unlock();
-		}
-
-		if (message == null) {
-			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return getByteString(message);
-		}
-	}
-
-	/**
-	 * Native call to tox_get_userstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the friend's status
-	 */
-	private native ToxUserStatus tox_get_userstatus(long messengerPointer,
-			int friendnumber);
-
-	/**
-	 * Get the current status for the specified friend
-	 * 
-	 * @param friendnumber
-	 *            the friend's number
-	 * @return the friend's status
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public ToxUserStatus getUserStatus(int friendnumber) throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			return tox_get_userstatus(this.messengerPointer, friendnumber);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_get_selfuserstatus
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @return our current status
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	private native ToxUserStatus tox_get_selfuserstatus(long messengerPointer);
-
-	/**
-	 * Get our own current status
-	 * 
-	 * @return one of {@link ToxUserStatus}
-	 * @throws ToxException
-	 */
-	public ToxUserStatus getSelfUserStatus() throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			return tox_get_selfuserstatus(this.messengerPointer);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
-	 * Native call to tox_sends_receipts
-	 * 
-	 * @param messengerPointer
-	 *            pointer to the internal messenger struct
-	 * @param sendReceipts
-	 *            <code>true</code> to send receipts, <code>false</code>
-	 *            otherwise
-	 * @param friendnumber
-	 *            the friend's number
-	 */
-	private native void tox_set_sends_receipts(long messengerPointer,
-			boolean sendReceipts, int friendnumber);
-
-	/**
-	 * Set whether or not to send read receipts to the originator of a message
-	 * once we received a message. This defaults to <code>true</code>, and must
-	 * be disabled manually for each friend, if not required
-	 * 
-	 * @param sendReceipts
-	 *            <code>true</code> to send receipts, <code>false</code>
-	 *            otherwise
-	 * @param friendnumber
-	 *            the friend's number
-	 * @throws ToxException
-	 *             if the instance has been killed
-	 */
-	public void setSendReceipts(boolean sendReceipts, int friendnumber)
-			throws ToxException {
-		this.lock.lock();
-		try {
-			checkPointer();
-
-			tox_set_sends_receipts(this.messengerPointer, sendReceipts,
-					friendnumber);
-		} finally {
-			this.lock.unlock();
-		}
-	}
-
-	/**
 	 * Native call to tox_save
 	 * 
 	 * @param messengerPointer
@@ -1210,7 +872,7 @@ public class JTox<F extends ToxFriend> {
 	 *             if the instance has been killed, or an error occurred while
 	 *             loading
 	 */
-	public void load(byte[] data) throws ToxException {
+	private void load(byte[] data) throws ToxException {
 		this.lock.lock();
 		try {
 			checkPointer();
@@ -1218,8 +880,26 @@ public class JTox<F extends ToxFriend> {
 			if (tox_load(this.messengerPointer, data, data.length)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
+			refreshList();
 		} finally {
 			this.lock.unlock();
+		}
+	}
+
+	/**
+	 * Refresh the friend list, looking for new friends, status changes, name
+	 * changes etc.
+	 * 
+	 * @throws ToxException
+	 *             if the instance was killed, or an internal error occured
+	 */
+	public void refreshList() throws ToxException {
+		for (int i : getFriendList()) {
+			this.friendList.addFriendIfNotExists(i);
+			getClientId(i);
+			getName(i);
+			getStatusMessage(i);
+			getUserStatus(i);
 		}
 	}
 
@@ -1239,7 +919,7 @@ public class JTox<F extends ToxFriend> {
 	 * @throws ToxException
 	 *             if the instance was killed, or the list was not retrieved
 	 */
-	public ArrayList<Integer> getFriendList() throws ToxException {
+	private ArrayList<Integer> getFriendList() throws ToxException {
 		this.lock.lock();
 		int[] ids;
 		try {
@@ -1253,12 +933,247 @@ public class JTox<F extends ToxFriend> {
 		if (ids == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
 		} else {
-
 			ArrayList<Integer> list = new ArrayList<Integer>();
 			for (int i : ids) {
 				list.add(i);
 			}
 			return list;
 		}
+	}
+
+	/**
+	 * Native call to tox_getclient_id
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            local number of the friend
+	 * @return the public key of the specified friend
+	 */
+	private native String tox_getclient_id(long messengerPointer,
+			int friendnumber);
+
+	/**
+	 * Get the client id for a given Friend, and update that friends friend ID
+	 * to that value.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the client id
+	 */
+	private void getClientId(int friendnumber) throws ToxException {
+		this.lock.lock();
+		String result;
+		try {
+			checkPointer();
+
+			result = tox_getclient_id(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (result == null || result.equals("")) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			this.friendList.getByFriendNumber(friendnumber).setId(result);
+		}
+	}
+
+	/**
+	 * Native call to tox_getname
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the specified friend's name
+	 */
+	private native byte[] tox_getname(long messengerPointer, int friendnumber);
+
+	/**
+	 * Get the specified friend's name
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @throws ToxException
+	 *             if the instance has been killed or an error occurred
+	 */
+	private void getName(int friendnumber) throws ToxException {
+		this.lock.lock();
+		byte[] name;
+		try {
+			checkPointer();
+
+			name = tox_getname(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (name == null) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			this.friendList.getByFriendNumber(friendnumber).setName(
+					getByteString(name));
+		}
+	}
+
+	/**
+	 * Native call to tox_copy_statusmessage
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the status message
+	 */
+	private native byte[] tox_getstatusmessage(long messengerPointer,
+			int friendnumber);
+
+	/**
+	 * Get the friend's status message
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred while
+	 *             getting the status message
+	 */
+	private void getStatusMessage(int friendnumber) throws ToxException {
+		this.lock.lock();
+		byte[] status;
+		try {
+			checkPointer();
+
+			status = tox_getstatusmessage(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (status == null) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		} else {
+			this.friendList.getByFriendNumber(friendnumber).setStatusMessage(
+					getByteString(status));
+		}
+	}
+
+	/**
+	 * Native call to tox_get_userstatus
+	 * 
+	 * @param messengerPointer
+	 *            pointer to the internal messenger struct
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return the friend's status
+	 */
+	private native ToxUserStatus tox_get_userstatus(long messengerPointer,
+			int friendnumber);
+
+	/**
+	 * Get the current status for the specified friend
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	private void getUserStatus(int friendnumber) throws ToxException {
+		ToxUserStatus status = ToxUserStatus.TOX_USERSTATUS_INVALID;
+		this.lock.lock();
+		try {
+			checkPointer();
+
+			status = tox_get_userstatus(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+		this.friendList.getByFriendNumber(friendnumber).setStatus(status);
+	}
+
+	/**
+	 * Utility method that checks the current pointer and throws an exception if
+	 * it is not valid
+	 * 
+	 * @throws ToxException
+	 *             if the instance has been killed
+	 */
+	private void checkPointer() throws ToxException {
+		if (!validPointers.contains(this.messengerPointer)) {
+			throw new ToxException(ToxError.TOX_KILLED_INSTANCE);
+		}
+	}
+
+	/**
+	 * If you need to pass a JTox instance around between different contexts,
+	 * and are unable to pass instances directly, use this method to acquire the
+	 * instance number of this instance. Once acquired, you can acquire the
+	 * instance with {@link JTox#getInstance(int)}.
+	 * 
+	 * @return the instance number
+	 */
+	public int getInstanceNumber() {
+		return this.instanceNumber;
+	}
+
+	/**
+	 * Get the instance associated with the specified instance number. This may
+	 * return <code>null</code> if either the instance was killed, or if no
+	 * instance with that number exists.
+	 * 
+	 * @param instancenumber
+	 * @return the associated instance
+	 */
+	public static JTox<?> getInstance(int instancenumber) {
+		return instances.get(instancenumber);
+	}
+
+	/**
+	 * Turns the given String into an array of UTF-8 encoded bytes, also adding
+	 * a nullbyte at the end for convenience
+	 * 
+	 * @param in
+	 *            the String to convert
+	 * @return a byte array
+	 */
+	public static byte[] getStringBytes(String in) {
+		try {
+			return in.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new InternalError("UTF-8 support is needed to continue.");
+		}
+	}
+
+	/**
+	 * Turns the given byte array into a UTF-8 encoded string
+	 * 
+	 * @param in
+	 *            the byte array to convert
+	 * @return an UTF-8 String based on the given byte array
+	 */
+	public static String getByteString(byte[] in) {
+		try {
+			return new String(in, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new InternalError("UTF-8 support is needed to continue.");
+		}
+	}
+
+	/**
+	 * Convert a given hexadecimal String to a byte array.
+	 * 
+	 * @param in
+	 *            String to convert
+	 * @return byte array representation of the hexadecimal String
+	 */
+	public static byte[] hexToByteArray(String in) {
+		int length = in.length() / 2;
+		byte[] out = new byte[length];
+		for (int i = 0; i < length; i += 2) {
+			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
+					.digit(in.charAt(i + 1), 16));
+		}
+		return out;
 	}
 }

@@ -74,5 +74,9 @@ public enum ToxError {
 	/**
 	 * A friend with the specified friendnumber already exists
 	 */
-	TOX_FRIEND_EXISTS;
+	TOX_FRIEND_EXISTS,
+	/**
+	 * Attempted to set our own status to "invalid"
+	 */
+	TOX_STATUS_INVALID;
 }

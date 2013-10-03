@@ -134,6 +134,16 @@ public interface FriendList<F extends ToxFriend> {
 	F addFriend(int friendnumber) throws FriendExistsException;
 
 	/**
+	 * Create the new friend and add it to the list
+	 * 
+	 * @param friendnumber
+	 *            the new friend
+	 * @return the newly created friend, or the friend with the specified friend
+	 *         number
+	 */
+	F addFriendIfNotExists(int friendnumber);
+
+	/**
 	 * Remove the friend associated with that friendnumber
 	 * 
 	 * @param friendnumber

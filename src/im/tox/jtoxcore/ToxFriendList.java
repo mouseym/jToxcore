@@ -213,6 +213,20 @@ public class ToxFriendList implements FriendList<ToxFriend> {
 	}
 
 	@Override
+	public ToxFriend addFriendIfNotExists(int friendnumber) {
+		synchronized (this.friends) {
+			for (ToxFriend f : this.friends) {
+				if (f.getFriendnumber() == friendnumber) {
+					return f;
+				}
+			}
+			ToxFriend friend = new ToxFriend(friendnumber);
+			this.friends.add(friend);
+			return friend;
+		}
+	}
+
+	@Override
 	public void removeFriend(int friendnumber) {
 		synchronized (this.friends) {
 			Iterator<ToxFriend> it = this.friends.iterator();

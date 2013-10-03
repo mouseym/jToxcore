@@ -32,7 +32,9 @@ import java.util.List;
  * API. If you want this field to be persistent and still available after
  * saving/loading, you will have to persist it to your own storage and take care
  * of loading it correctly at runtime. All other fields are automatically
- * populated when using the {@link JTox#load(byte[])} method.
+ * populated when using the
+ * {@link JTox#JTox(byte[], FriendList, im.tox.jtoxcore.callbacks.CallbackHandler)}
+ * constructor.
  * 
  * @author sonOfRa
  * 
