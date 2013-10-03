@@ -167,9 +167,8 @@ public class JTox<F extends ToxFriend> {
 
 		if (address == null || address.equals("")) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return address;
 		}
+		return address;
 	}
 
 	/**
@@ -270,9 +269,8 @@ public class JTox<F extends ToxFriend> {
 
 		if (name == null) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			return name;
 		}
+		return name;
 
 	}
 
@@ -966,9 +964,8 @@ public class JTox<F extends ToxFriend> {
 
 		if (result == null || result.equals("")) {
 			throw new ToxException(ToxError.TOX_UNKNOWN);
-		} else {
-			this.friendList.getByFriendNumber(friendnumber).setId(result);
 		}
+		this.friendList.getByFriendNumber(friendnumber).setId(result);
 	}
 
 	/**
