@@ -18,10 +18,3 @@ set(LIB_TARGET_NAME jtoxcore)
 # Subdir for Java code
 add_subdirectory (src)
 add_subdirectory (jni)
-
-#if(DEFINED BUILD_TESTCLIENT)
-#	if(${BUILD_TESTCLIENT} STREQUAL "y")
-#		set(TEST_TARGET_NAME jToxtest)
-#		add_subdirectory (test)
-#	endif()
-#endif()
