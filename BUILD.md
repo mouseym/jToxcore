@@ -16,7 +16,7 @@ cd build
 cmake ..
 make
 ```
-This will create a .jar file in ```build/src/jToxcore-version.jar ```, and a shared library named libjtoxcore in ```build/jni/libjtoxcore.{so|dll}```. Due to the inner workings of the JVM, you will only be able to use this library on a system with the same combination of OS and Architecture: If you built it on a 32-bit Linux, it will only work in a 32-bit JVM on Linux. If you built it under 64-bit Windows, it will only work in a 64-bit JVM on Windows. The .jar is reusable and can also be used on other platforms.
+This will create a .jar file in ```build/src/jToxcore-version.jar ```, and a shared library named libjtoxcore in ```build/jni/libjtoxcore.{so|dll|dylib}```. Due to the inner workings of the JVM, you will only be able to use this library on a system with the same combination of OS and Architecture: If you built it on a 32-bit Linux, it will only work in a 32-bit JVM on Linux. If you built it under 64-bit Windows, it will only work in a 64-bit JVM on Windows. The .jar is reusable and can also be used on other platforms.
 
 ## Building for other platforms ##
 Before you start, you have to compile toxcore for the target platform. Instructions for building tox are in the tox repository. Once completed, you will have to create a <a href="http://www.cmake.org/Wiki/CMake_Cross_Compiling">CMake Toolchain File</a> that fits your architecture.
