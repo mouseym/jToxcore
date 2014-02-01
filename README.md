@@ -21,7 +21,7 @@ so direct any questions on importing this to https://github.com/sonOfRa. Also so
 4.2 Select "Makefile Project"
 4.3 Select a toolchain. I use Linux GCC, you might have to pick another, depending on your platform and environment
 5. Go to Project -> Properties -> C/C++ General -> Paths and Symbols
-5.1 In the "Includes" tab, add ${JAVA_HOME}/include and ${JAVA_HOME}/(linux|win32|whatever) to all languages.
+5.1 In the "Includes" tab, add ${JAVA_HOME}/include and ${JAVA_HOME}/include/(linux|win32|whatever) to all languages.
 5.2 If tox.h is not on your include path, you have to add it manually, just like you added the above include paths. If you did a 'make install' when building tox, the headers should be in /usr/local/include
 6. Hit Shift+F9 to open the "Make"-Menu. Here you add a make target called "JTox.h", which you can now execute after bringing up the Make menu again. This target creates the header files for each designated native method in the Java Code
 
