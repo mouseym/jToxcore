@@ -138,14 +138,14 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_getaddress
+	 * Native call to tox_get_address
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct.
 	 * 
 	 * @return the client's address on success, null on failure
 	 */
-	private native String tox_getaddress(long messengerPointer);
+	private native String tox_get_address(long messengerPointer);
 
 	/**
 	 * Get our own address
@@ -160,7 +160,7 @@ public class JTox<F extends ToxFriend> {
 		String address;
 		try {
 			checkPointer();
-			address = tox_getaddress(this.messengerPointer);
+			address = tox_get_address(this.messengerPointer);
 		} finally {
 			this.lock.unlock();
 		}
@@ -172,7 +172,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_get_selfuserstatus
+	 * Native call to tox_get_self_user_status
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -180,7 +180,7 @@ public class JTox<F extends ToxFriend> {
 	 * @throws ToxException
 	 *             if the instance has been killed
 	 */
-	private native ToxUserStatus tox_get_selfuserstatus(long messengerPointer);
+	private native ToxUserStatus tox_get_self_user_status(long messengerPointer);
 
 	/**
 	 * Get our own current status
@@ -193,14 +193,14 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			return tox_get_selfuserstatus(this.messengerPointer);
+			return tox_get_self_user_status(this.messengerPointer);
 		} finally {
 			this.lock.unlock();
 		}
 	}
 
 	/**
-	 * Native call to tox_set_statusmessage
+	 * Native call to tox_set_status_message
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -210,7 +210,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the length of the new status message in bytes
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_set_statusmessage(long messengerPointer,
+	private native boolean tox_set_status_message(long messengerPointer,
 			byte[] message, int length);
 
 	/**
@@ -231,7 +231,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_set_statusmessage(this.messengerPointer, messageArray,
+			if (tox_set_status_message(this.messengerPointer, messageArray,
 					messageArray.length)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
@@ -241,13 +241,13 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_getselfname
+	 * Native call to tox_get_self_name
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
 	 * @return our name
 	 */
-	private native String tox_getselfname(long messengerPointer);
+	private native String tox_get_self_name(long messengerPointer);
 
 	/**
 	 * Function to get our current name
@@ -262,7 +262,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			name = tox_getselfname(this.messengerPointer);
+			name = tox_get_self_name(this.messengerPointer);
 		} finally {
 			this.lock.unlock();
 		}
@@ -275,7 +275,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_setname
+	 * Native call to tox_set_name
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -285,7 +285,7 @@ public class JTox<F extends ToxFriend> {
 	 *            length of the new name in byte
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_setname(long messengerPointer, byte[] newname,
+	private native boolean tox_set_name(long messengerPointer, byte[] newname,
 			int length);
 
 	/**
@@ -308,7 +308,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_setname(this.messengerPointer, newnameArray,
+			if (tox_set_name(this.messengerPointer, newnameArray,
 					newnameArray.length)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
@@ -318,7 +318,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_set_userstatus
+	 * Native call to tox_set_user_status
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -326,7 +326,7 @@ public class JTox<F extends ToxFriend> {
 	 *            status to set
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_set_userstatus(long messengerPointer, int status);
+	private native boolean tox_set_user_status(long messengerPointer, int status);
 
 	/**
 	 * Set our current {@link ToxUserStatus}.
@@ -345,7 +345,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_set_userstatus(this.messengerPointer, status.ordinal())) {
+			if (tox_set_user_status(this.messengerPointer, status.ordinal())) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
@@ -354,7 +354,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_addfriend
+	 * Native call to tox_add_friend
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -366,7 +366,7 @@ public class JTox<F extends ToxFriend> {
 	 *            length of the message sent to friend
 	 * @return friend number on success, error code on failure
 	 */
-	private native int tox_addfriend(long messengerPointer, byte[] address,
+	private native int tox_add_friend(long messengerPointer, byte[] address,
 			byte[] data, int length);
 
 	/**
@@ -393,7 +393,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend(this.messengerPointer, addressArray,
+			errcode = tox_add_friend(this.messengerPointer, addressArray,
 					dataArray, dataArray.length);
 
 		} finally {
@@ -408,7 +408,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_addfriend_norequest
+	 * Native call to tox_add_friend_norequest
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -416,7 +416,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the address of the client you want to add
 	 * @return the local number of the friend in your list
 	 */
-	private native int tox_addfriend_norequest(long messengerPointer,
+	private native int tox_add_friend_norequest(long messengerPointer,
 			byte[] address);
 
 	/**
@@ -441,7 +441,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			errcode = tox_addfriend_norequest(this.messengerPointer,
+			errcode = tox_add_friend_norequest(this.messengerPointer,
 					addressArray);
 		} finally {
 			this.lock.unlock();
@@ -455,7 +455,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_delfriend
+	 * Native call to tox_del_friend
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -463,7 +463,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the number of the friend
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_delfriend(long messengerPointer, int friendnumber);
+	private native boolean tox_del_friend(long messengerPointer, int friendnumber);
 
 	/**
 	 * Method used to delete a friend
@@ -478,7 +478,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_delfriend(this.messengerPointer, friendnumber)) {
+			if (tox_del_friend(this.messengerPointer, friendnumber)) {
 				throw new ToxException(ToxError.TOX_UNKNOWN);
 			}
 		} finally {
@@ -488,7 +488,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_sendmessage
+	 * Native call to tox_send_message
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -500,7 +500,7 @@ public class JTox<F extends ToxFriend> {
 	 *            length of the message in bytes
 	 * @return the message ID on success, 0 on failure
 	 */
-	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+	private native int tox_send_message(long messengerPointer, int friendnumber,
 			byte[] message, int length);
 
 	/**
@@ -523,7 +523,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			result = tox_sendmessage(this.messengerPointer,
+			result = tox_send_message(this.messengerPointer,
 					friend.getFriendnumber(), messageArray, messageArray.length);
 		} finally {
 			this.lock.unlock();
@@ -538,7 +538,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_sendmessage_withid
+	 * Native call to tox_send_message_withid
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -553,7 +553,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the message ID to use
 	 * @return the message ID on success, 0 on failure
 	 */
-	private native int tox_sendmessage(long messengerPointer, int friendnumber,
+	private native int tox_send_message_withid(long messengerPointer, int friendnumber,
 			byte[] message, int length, int messageID);
 
 	/**
@@ -578,7 +578,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			result = tox_sendmessage(this.messengerPointer,
+			result = tox_send_message_withid(this.messengerPointer,
 					friend.getFriendnumber(), messageArray,
 					messageArray.length, messageID);
 
@@ -594,7 +594,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_sendaction
+	 * Native call to tox_send_action
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -606,7 +606,7 @@ public class JTox<F extends ToxFriend> {
 	 *            length of the action in bytes
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_sendaction(long messengerPointer,
+	private native boolean tox_send_action(long messengerPointer,
 			int friendnumber, byte[] action, int length);
 
 	/**
@@ -625,7 +625,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_sendaction(this.messengerPointer, friend.getFriendnumber(),
+			if (tox_send_action(this.messengerPointer, friend.getFriendnumber(),
 					actionArray, actionArray.length)) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			}
@@ -635,7 +635,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_sends_receipts
+	 * Native call to tox_set_sends_receipts
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -703,7 +703,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_bootstrap
+	 * Native call to tox_bootstrap_from_address
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -714,7 +714,7 @@ public class JTox<F extends ToxFriend> {
 	 * @param pubkey
 	 *            public key of the bootstrap node
 	 */
-	private native int tox_bootstrap(long messengerPointer, String ip,
+	private native int tox_bootstrap_from_address(long messengerPointer, String ip,
 			int port, byte[] pubkey);
 
 	/**
@@ -745,7 +745,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_bootstrap(this.messengerPointer, host, port, pubkeyArray) == 0) {
+			if (tox_bootstrap_from_address(this.messengerPointer, host, port, pubkeyArray) == 0) {
 				throw new UnknownHostException(host);
 			}
 
@@ -930,7 +930,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_getclient_id
+	 * Native call to tox_get_client_id
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -938,7 +938,7 @@ public class JTox<F extends ToxFriend> {
 	 *            local number of the friend
 	 * @return the public key of the specified friend
 	 */
-	private native String tox_getclient_id(long messengerPointer,
+	private native String tox_get_client_id(long messengerPointer,
 			int friendnumber);
 
 	/**
@@ -957,7 +957,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			result = tox_getclient_id(this.messengerPointer, friendnumber);
+			result = tox_get_client_id(this.messengerPointer, friendnumber);
 		} finally {
 			this.lock.unlock();
 		}
@@ -969,7 +969,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_getname
+	 * Native call to tox_get_name
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -977,7 +977,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the friend's number
 	 * @return the specified friend's name
 	 */
-	private native byte[] tox_getname(long messengerPointer, int friendnumber);
+	private native byte[] tox_get_name(long messengerPointer, int friendnumber);
 
 	/**
 	 * Get the specified friend's name
@@ -993,7 +993,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			name = tox_getname(this.messengerPointer, friendnumber);
+			name = tox_get_name(this.messengerPointer, friendnumber);
 		} finally {
 			this.lock.unlock();
 		}
@@ -1006,7 +1006,7 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Native call to tox_copy_statusmessage
+	 * Native call to tox_get_status_message
 	 * 
 	 * @param messengerPointer
 	 *            pointer to the internal messenger struct
@@ -1014,7 +1014,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the friend's number
 	 * @return the status message
 	 */
-	private native byte[] tox_getstatusmessage(long messengerPointer,
+	private native byte[] tox_get_status_message(long messengerPointer,
 			int friendnumber);
 
 	/**
@@ -1032,7 +1032,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			status = tox_getstatusmessage(this.messengerPointer, friendnumber);
+			status = tox_get_status_message(this.messengerPointer, friendnumber);
 		} finally {
 			this.lock.unlock();
 		}
@@ -1053,7 +1053,7 @@ public class JTox<F extends ToxFriend> {
 	 *            the friend's number
 	 * @return the friend's status
 	 */
-	private native ToxUserStatus tox_get_userstatus(long messengerPointer,
+	private native ToxUserStatus tox_get_user_status(long messengerPointer,
 			int friendnumber);
 
 	/**
@@ -1070,7 +1070,7 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			status = tox_get_userstatus(this.messengerPointer, friendnumber);
+			status = tox_get_user_status(this.messengerPointer, friendnumber);
 		} finally {
 			this.lock.unlock();
 		}
