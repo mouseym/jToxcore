@@ -1009,6 +1009,35 @@ public class JTox<F extends ToxFriend> {
 	}
 	
 	/**
+	 * Checks if there exists a friend with given friendnumber.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the connection status
+	 */
+	private native boolean tox_get_friend_exists(long messengerPointer, int friendnumber);
+	
+	/**
+	 * Checks if there exists a friend with given friendnumber.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 */
+	private boolean getToxFriendExists(int friendnumber) throws ToxException {
+		this.lock.lock();
+		boolean result;
+		try {
+			checkPointer();
+			result = tox_get_friend_exists(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+		return result;
+	}
+	
+	/**
 	 * Native call to tox_get_name
 	 * 
 	 * @param messengerPointer

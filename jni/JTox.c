@@ -283,6 +283,11 @@ JNIEXPORT jint Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1connection_1status(JN
 	return ret;
 }
 
+JNIEXPORT jboolean Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1exists(JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+	uint8_t ret = tox_friend_exists(((tox_jni_globals_t*)((intptr_t)messenger))->tox, friendnumber);
+	return ret;
+}
+
 JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1name(JNIEnv* env, jobject obj, jlong messenger,
 		jint friendnumber) {
 	uint8_t *name = malloc(TOX_MAX_NAME_LENGTH);
