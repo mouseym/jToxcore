@@ -392,7 +392,6 @@ public class JTox<F extends ToxFriend> {
 		int errcode;
 		try {
 			checkPointer();
-
 			errcode = tox_add_friend(this.messengerPointer, addressArray,
 					dataArray, dataArray.length);
 
@@ -1293,11 +1292,10 @@ public class JTox<F extends ToxFriend> {
 	 * @return byte array representation of the hexadecimal String
 	 */
 	public static byte[] hexToByteArray(String in) {
-		int length = in.length() / 2;
-		byte[] out = new byte[length];
+		int length = in.length();
+		byte[] out = new byte[length/2];
 		for (int i = 0; i < length; i += 2) {
-			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
-					.digit(in.charAt(i + 1), 16));
+			out[i / 2] =  (byte)((Character.digit(in.charAt(i), 16) << 4) + Character.digit(in.charAt(i + 1), 16));
 		}
 		return out;
 	}
