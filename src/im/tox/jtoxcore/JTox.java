@@ -967,7 +967,47 @@ public class JTox<F extends ToxFriend> {
 		}
 		this.friendList.getByFriendNumber(friendnumber).setId(result);
 	}
+	
+	/**
+	 * Native call to tox_get_friend_connection_status
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return connecting status of a friend
+	 */
+	private native int tox_get_friend_connection_status(long messengerPointer, int friendnumber);
 
+	/**
+	 * Get the connection status for a given Friend, and update that friends connection status
+	 * to that value.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the connection status
+	 */
+	private void getFriendConnectionStatus(int friendnumber) throws ToxException {
+		this.lock.lock();
+		int result;
+		try {
+			checkPointer();
+			result = tox_get_friend_connection_status(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (result == -1) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		}
+		if (result == 0) {
+			this.friendList.getByFriendNumber(friendnumber).setOnline(false);
+		}
+		else {
+			this.friendList.getByFriendNumber(friendnumber).setOnline(true);
+		}
+	}
+	
 	/**
 	 * Native call to tox_get_name
 	 * 
