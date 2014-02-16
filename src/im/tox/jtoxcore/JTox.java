@@ -392,7 +392,6 @@ public class JTox<F extends ToxFriend> {
 		int errcode;
 		try {
 			checkPointer();
-
 			errcode = tox_add_friend(this.messengerPointer, addressArray,
 					dataArray, dataArray.length);
 
@@ -967,7 +966,76 @@ public class JTox<F extends ToxFriend> {
 		}
 		this.friendList.getByFriendNumber(friendnumber).setId(result);
 	}
+	
+	/**
+	 * Native call to tox_get_friend_connection_status
+	 * 
+	 * @param friendnumber
+	 *            the friend's number
+	 * @return connecting status of a friend
+	 */
+	private native int tox_get_friend_connection_status(long messengerPointer, int friendnumber);
 
+	/**
+	 * Get the connection status for a given Friend, and update that friends connection status
+	 * to that value.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the connection status
+	 */
+	private void getFriendConnectionStatus(int friendnumber) throws ToxException {
+		this.lock.lock();
+		int result;
+		try {
+			checkPointer();
+			result = tox_get_friend_connection_status(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+
+		if (result == -1) {
+			throw new ToxException(ToxError.TOX_UNKNOWN);
+		}
+		if (result == 0) {
+			this.friendList.getByFriendNumber(friendnumber).setOnline(false);
+		}
+		else {
+			this.friendList.getByFriendNumber(friendnumber).setOnline(true);
+		}
+	}
+	
+	/**
+	 * Checks if there exists a friend with given friendnumber.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 * @throws ToxException
+	 *             if the instance has been killed, or an error occurred when
+	 *             attempting to fetch the connection status
+	 */
+	private native boolean tox_get_friend_exists(long messengerPointer, int friendnumber);
+	
+	/**
+	 * Checks if there exists a friend with given friendnumber.
+	 * 
+	 * @param friendnumber
+	 *            the friendnumber
+	 */
+	private boolean getToxFriendExists(int friendnumber) throws ToxException {
+		this.lock.lock();
+		boolean result;
+		try {
+			checkPointer();
+			result = tox_get_friend_exists(this.messengerPointer, friendnumber);
+		} finally {
+			this.lock.unlock();
+		}
+		return result;
+	}
+	
 	/**
 	 * Native call to tox_get_name
 	 * 
@@ -1224,11 +1292,10 @@ public class JTox<F extends ToxFriend> {
 	 * @return byte array representation of the hexadecimal String
 	 */
 	public static byte[] hexToByteArray(String in) {
-		int length = in.length() / 2;
-		byte[] out = new byte[length];
+		int length = in.length();
+		byte[] out = new byte[length/2];
 		for (int i = 0; i < length; i += 2) {
-			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
-					.digit(in.charAt(i + 1), 16));
+			out[i / 2] =  (byte)((Character.digit(in.charAt(i), 16) << 4) + Character.digit(in.charAt(i + 1), 16));
 		}
 		return out;
 	}
