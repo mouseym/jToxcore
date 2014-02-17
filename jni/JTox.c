@@ -278,12 +278,12 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1status_1message(J
 	return ret;
 }
 
-JNIEXPORT jint Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1connection_1status(JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1connection_1status(JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
 	uint32_t ret = tox_get_friend_connection_status(((tox_jni_globals_t*)((intptr_t)messenger))->tox, friendnumber);
 	return ret;
 }
 
-JNIEXPORT jboolean Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1exists(JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
+JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1exists(JNIEnv *env, jobject obj, jlong messenger, jint friendnumber) {
 	uint8_t ret = tox_friend_exists(((tox_jni_globals_t*)((intptr_t)messenger))->tox, friendnumber);
 	return ret;
 }
