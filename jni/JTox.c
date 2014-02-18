@@ -477,8 +477,7 @@ static void callback_friendrequest(uint8_t *pubkey, uint8_t *message, uint16_t l
     (*env)->CallVoidMethod(env, ptr->handler, meth, _pubkey, _message);
 }
 
-static void callback_friendmessage(Tox *tox, int friendnumber, uint8_t *message, uint16_t length,
-                                   tox_jni_globals_t *ptr)
+static void callback_friendmessage(int friendnumber, uint8_t *message, uint16_t length, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -490,7 +489,7 @@ static void callback_friendmessage(Tox *tox, int friendnumber, uint8_t *message,
     (*env)->CallVoidMethod(env, ptr->handler, meth, friendnumber, _message);
 }
 
-static void callback_action(Tox *tox, int friendnumber, uint8_t *action, uint16_t length, tox_jni_globals_t *ptr)
+static void callback_action(int friendnumber, uint8_t *action, uint16_t length, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -502,7 +501,7 @@ static void callback_action(Tox *tox, int friendnumber, uint8_t *action, uint16_
     (*env)->CallVoidMethod(env, ptr->handler, meth, friendnumber, _action);
 }
 
-static void callback_namechange(Tox *tox, int friendnumber, uint8_t *newname, uint16_t length, tox_jni_globals_t *ptr)
+static void callback_namechange(int friendnumber, uint8_t *newname, uint16_t length, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -517,8 +516,7 @@ static void callback_namechange(Tox *tox, int friendnumber, uint8_t *newname, ui
     (*env)->CallVoidMethod(env, ptr->handler, handlerMeth, friendnumber, _newname);
 }
 
-static void callback_statusmessage(Tox *tox, int friendnumber, uint8_t *newstatus, uint16_t length,
-                                   tox_jni_globals_t *ptr)
+static void callback_statusmessage(int friendnumber, uint8_t *newstatus, uint16_t length, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -533,7 +531,7 @@ static void callback_statusmessage(Tox *tox, int friendnumber, uint8_t *newstatu
     (*env)->CallVoidMethod(env, ptr->handler, handlermeth, friendnumber, _newstatus);
 }
 
-static void callback_userstatus(Tox *tox, int friendnumber, TOX_USERSTATUS status, tox_jni_globals_t *ptr)
+static void callback_userstatus(int friendnumber, TOX_USERSTATUS status, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -570,7 +568,7 @@ static void callback_userstatus(Tox *tox, int friendnumber, TOX_USERSTATUS statu
     (*env)->CallVoidMethod(env, ptr->handler, handlermeth, friendnumber, enum_val);
 }
 
-static void callback_read_receipt(Tox *tox, int friendnumber, uint32_t receipt, tox_jni_globals_t *ptr)
+static void callback_read_receipt(int friendnumber, uint32_t receipt, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
@@ -582,7 +580,7 @@ static void callback_read_receipt(Tox *tox, int friendnumber, uint32_t receipt, 
     (*env)->CallVoidMethod(env, ptr->handler, handlermeth, friendnumber, receipt);
 }
 
-static void callback_connectionstatus(Tox *tox, int friendnumber, uint8_t newstatus, tox_jni_globals_t *ptr)
+static void callback_connectionstatus(int friendnumber, uint8_t newstatus, tox_jni_globals_t *ptr)
 {
     JNIEnv *env;
     (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
