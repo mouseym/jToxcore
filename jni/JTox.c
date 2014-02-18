@@ -104,12 +104,12 @@ JNIEXPORT jlong JNICALL Java_im_tox_jtoxcore_JTox_tox_1new(JNIEnv *env, jobject 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1bootstrap_1from_1address(JNIEnv *env, jobject obj,
 		jlong messenger, jstring ip, jint port, jbyteArray address) {
 	const char *_ip = (*env)->GetStringUTFChars(env, ip, 0);
-	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
+	jbyte *_address = (*env)->GetByteArrayElements(env, address, 0);
 
 	uint16_t _port = htons((uint16_t) port);
 
 	jint result = tox_bootstrap_from_address(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, _ip, 1, _port,
-			_address);
+			(uint8_t*) _address);
 
 	(*env)->ReleaseStringUTFChars(env, ip, _ip);
 	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
@@ -137,17 +137,16 @@ JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1save(JNIEnv *env, jo
 	uint8_t *data = malloc(size);
 	tox_save(tox, data);
 	jbyteArray bytes = (*env)->NewByteArray(env, size);
-	(*env)->SetByteArrayRegion(env, bytes, 0, size, data);
+	(*env)->SetByteArrayRegion(env, bytes, 0, size, (jbyte*) data);
 	free(data);
 	return bytes;
 }
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1load(JNIEnv *env, jobject obj, jlong messenger,
 		jbyteArray bytes, jint length) {
-	uint8_t *data = (*env)->GetByteArrayElements(env, bytes, 0);
-	return tox_load(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, data, length) == 0 ?
-	JNI_FALSE :
-																								JNI_TRUE;
+	jbyte *data = (*env)->GetByteArrayElements(env, bytes, 0);
+	return tox_load(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, (uint8_t*) data, length) == 0 ?
+		JNI_FALSE : JNI_TRUE;
 }
 
 /**
@@ -160,10 +159,11 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1load(JNIEnv *env, jobj
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1add_1friend(JNIEnv *env, jobject obj, jlong messenger,
 		jbyteArray address, jbyteArray data, jint length) {
-	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
-	uint8_t *_data = (*env)->GetByteArrayElements(env, data, 0);
+	jbyte *_address = (*env)->GetByteArrayElements(env, address, 0);
+	jbyte *_data = (*env)->GetByteArrayElements(env, data, 0);
 
-	int ret = tox_add_friend(((tox_jni_globals_t*)((intptr_t)messenger))->tox, _address, _data, length);
+	int ret = tox_add_friend(((tox_jni_globals_t*)((intptr_t)messenger))->tox, (uint8_t*) _address, (uint8_t*) _data,
+		length);
 
 	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
 	(*env)->ReleaseByteArrayElements(env, data, _data, JNI_ABORT);
@@ -172,9 +172,9 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1add_1friend(JNIEnv *env, j
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1add_1friend_1norequest(JNIEnv *env, jobject obj, jlong messenger,
 		jbyteArray address) {
-	uint8_t *_address = (*env)->GetByteArrayElements(env, address, 0);
+	jbyte *_address = (*env)->GetByteArrayElements(env, address, 0);
 
-	int ret = tox_add_friend_norequest(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, _address);
+	int ret = tox_add_friend_norequest(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, (uint8_t*) _address);
 	(*env)->ReleaseByteArrayElements(env, address, _address, JNI_ABORT);
 	return ret;
 }
@@ -210,9 +210,9 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1del_1friend(JNIEnv *en
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1send_1message(JNIEnv *env, jobject obj, jlong messenger,
 		jint friendnumber, jbyteArray message, jint length) {
-	uint8_t *_message = (*env)->GetByteArrayElements(env, message, 0);
+	jbyte *_message = (*env)->GetByteArrayElements(env, message, 0);
 
-	uint32_t mess_id = tox_send_message(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, _message,
+	uint32_t mess_id = tox_send_message(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, (uint8_t*) _message,
 			length);
 	(*env)->ReleaseByteArrayElements(env, message, _message, JNI_ABORT);
 	return mess_id;
@@ -220,19 +220,19 @@ JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1send_1message(JNIEnv *env,
 
 JNIEXPORT jint JNICALL Java_im_tox_jtoxcore_JTox_tox_1send_1message_1withid(JNIEnv *env, jobject obj, jlong messenger,
 		jint friendnumber, jbyteArray message, jint length, jint messageID) {
-	uint8_t *_message = (*env)->GetByteArrayElements(env, message, 0);
+	jbyte *_message = (*env)->GetByteArrayElements(env, message, 0);
 
 	uint32_t mess_id = tox_send_message_withid(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber,
-			messageID, _message, length);
+			messageID, (uint8_t*) _message, length);
 	(*env)->ReleaseByteArrayElements(env, message, _message, JNI_ABORT);
 	return mess_id;
 }
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1send_1action(JNIEnv *env, jobject obj, jlong messenger,
 		jint friendnumber, jbyteArray action, jint length) {
-	uint8_t *_action = (*env)->GetByteArrayElements(env, action, 0);
+	jbyte *_action = (*env)->GetByteArrayElements(env, action, 0);
 
-	jboolean ret = tox_send_action(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, _action, length);
+	jboolean ret = tox_send_action(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, (uint8_t*) _action, length);
 	(*env)->ReleaseByteArrayElements(env, action, _action, JNI_ABORT);
 	return ret;
 }
@@ -242,7 +242,7 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1name(JNIEnv *env,
 	jbyte *_newname = (*env)->GetByteArrayElements(env, newname, 0);
 
 	jboolean ret =
-			tox_set_name(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, _newname, length) == 0 ?
+			tox_set_name(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, (uint8_t*) _newname, length) == 0 ?
 					JNI_FALSE : JNI_TRUE;
 	(*env)->ReleaseByteArrayElements(env, newname, _newname, JNI_ABORT);
 
@@ -269,9 +269,9 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1self_1name(JNIEnv 
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1status_1message(JNIEnv *env, jobject obj,
 		jlong messenger, jbyteArray newstatus, jint length) {
-	uint8_t *_newstatus = (*env)->GetByteArrayElements(env, newstatus, 0);
+	jbyte *_newstatus = (*env)->GetByteArrayElements(env, newstatus, 0);
 	jboolean ret =
-			tox_set_status_message(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, _newstatus, length) == 0 ?
+			tox_set_status_message(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, (uint8_t*) _newstatus, length) == 0 ?
 					JNI_FALSE :
 					JNI_TRUE;
 	(*env)->ReleaseByteArrayElements(env, newstatus, _newstatus, JNI_ABORT);
@@ -290,8 +290,8 @@ JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friend_1exists(JN
 
 JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1name(JNIEnv* env, jobject obj, jlong messenger,
 		jint friendnumber) {
-	uint8_t *name = malloc(TOX_MAX_NAME_LENGTH);
-	int ret = tox_get_name(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, name);
+	jbyte *name = malloc(TOX_MAX_NAME_LENGTH);
+	int ret = tox_get_name(((tox_jni_globals_t*) ((intptr_t) messenger))->tox, friendnumber, (uint8_t*) name);
 
 	if (ret == -1) {
 		free(name);
@@ -314,8 +314,8 @@ JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1status_1message
 		jlong messenger, jint friendnumber) {
 	Tox *tox = ((tox_jni_globals_t*) ((intptr_t) messenger))->tox;
 	int size = tox_get_status_message_size(tox, friendnumber);
-	uint8_t *statusmessage = malloc(size);
-	int ret = tox_get_status_message(tox, friendnumber, statusmessage, size);
+	jbyte *statusmessage = malloc(size);
+	int ret = tox_get_status_message(tox, friendnumber, (uint8_t*) statusmessage, size);
 
 	if (ret == -1) {
 		free(statusmessage);
@@ -331,8 +331,8 @@ JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1status_1message
 JNIEXPORT jbyteArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1getselfstatusmessage(JNIEnv *env, jobject obj,
 		jlong messenger) {
 	Tox *tox = ((tox_jni_globals_t*) ((intptr_t) messenger))->tox;
-	uint8_t *status = malloc(TOX_MAX_STATUSMESSAGE_LENGTH);
-	int length = tox_get_self_status_message(tox, status,
+	jbyte *status = malloc(TOX_MAX_STATUSMESSAGE_LENGTH);
+	int length = tox_get_self_status_message(tox, (uint8_t*) status,
 	TOX_MAX_STATUSMESSAGE_LENGTH);
 
 	if (length == -1) {
@@ -406,15 +406,10 @@ JNIEXPORT jintArray JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1friendlist(JNIEn
 	uint32_t length = tox_count_friendlist(tox);
 	int *list = malloc(length);
 	uint32_t actual_length = tox_get_friendlist(tox, list, length);
-	if (actual_length == -1) {
-		free(list);
-		return 0;
-	} else {
-		jintArray arr = (*env)->NewIntArray(env, actual_length);
-		(*env)->SetIntArrayRegion(env, arr, 0, actual_length, (jint *) list);
-		free(list);
-		return arr;
-	}
+	jintArray arr = (*env)->NewIntArray(env, actual_length);
+	(*env)->SetIntArrayRegion(env, arr, 0, actual_length, (jint *) list);
+	free(list);
+	return arr;
 }
 
 /**
@@ -435,8 +430,7 @@ static void callback_friendrequest(uint8_t *pubkey, uint8_t *message, uint16_t l
 	addr_to_hex(pubkey, buf);
 	jstring _pubkey = (*env)->NewStringUTF(env, buf);
 	jbyteArray _message = (*env)->NewByteArray(env, length - 1);
-	uint8_t *temp = malloc(length);
-	(*env)->SetByteArrayRegion(env, _message, 0, length - 1, message);
+	(*env)->SetByteArrayRegion(env, _message, 0, length - 1, (jbyte*) message);
 
 	(*env)->CallVoidMethod(env, ptr->handler, meth, _pubkey, _message);
 }
@@ -449,7 +443,7 @@ static void callback_friendmessage(Tox *tox, int friendnumber, uint8_t *message,
 	jmethodID meth = (*env)->GetMethodID(env, class, "onMessage", "(I[B)V");
 
 	jbyteArray _message = (*env)->NewByteArray(env, length - 1);
-	(*env)->SetByteArrayRegion(env, _message, 0, length - 1, message);
+	(*env)->SetByteArrayRegion(env, _message, 0, length - 1, (jbyte*) message);
 	(*env)->CallVoidMethod(env, ptr->handler, meth, friendnumber, _message);
 }
 
@@ -460,7 +454,7 @@ static void callback_action(Tox * tox, int friendnumber, uint8_t *action, uint16
 	jmethodID meth = (*env)->GetMethodID(env, class, "onAction", "(I[B)V");
 
 	jbyteArray _action = (*env)->NewByteArray(env, length - 1);
-	(*env)->SetByteArrayRegion(env, _action, 0, length - 1, action);
+	(*env)->SetByteArrayRegion(env, _action, 0, length - 1, (jbyte*) action);
 	(*env)->CallVoidMethod(env, ptr->handler, meth, friendnumber, _action);
 }
 
@@ -473,7 +467,7 @@ static void callback_namechange(Tox * tox, int friendnumber, uint8_t *newname, u
 	jmethodID jToxmeth = (*env)->GetMethodID(env, jtoxclass, "onNameChange", "(I[B)V");
 
 	jbyteArray _newname = (*env)->NewByteArray(env, length - 1);
-	(*env)->SetByteArrayRegion(env, _newname, 0, length - 1, newname);
+	(*env)->SetByteArrayRegion(env, _newname, 0, length - 1, (jbyte*) newname);
 	(*env)->CallVoidMethod(env, ptr->jtox, jToxmeth, friendnumber, _newname);
 	(*env)->CallVoidMethod(env, ptr->handler, handlerMeth, friendnumber, _newname);
 }
@@ -488,7 +482,7 @@ static void callback_statusmessage(Tox *tox, int friendnumber, uint8_t *newstatu
 	jmethodID jtoxmeth = (*env)->GetMethodID(env, jtoxclass, "onStatusMessage", "(I[B)V");
 
 	jbyteArray _newstatus = (*env)->NewByteArray(env, length - 1);
-	(*env)->SetByteArrayRegion(env, _newstatus, 0, length - 1, newstatus);
+	(*env)->SetByteArrayRegion(env, _newstatus, 0, length - 1, (jbyte*) newstatus);
 	(*env)->CallVoidMethod(env, ptr->jtox, jtoxmeth, friendnumber, _newstatus);
 	(*env)->CallVoidMethod(env, ptr->handler, handlermeth, friendnumber, _newstatus);
 }
