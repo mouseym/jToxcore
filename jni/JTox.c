@@ -53,16 +53,6 @@ void addr_to_hex(uint8_t *addr, char *buf)
 }
 
 /**
- * Null-terminate the given string. Length is the length of the original string,
- * out must be allocated with a size of at least length+1
- */
-void nullterminate(uint8_t *in, uint16_t length, char *out)
-{
-    memcpy(out, in, length);
-    out[length] = '\0';
-}
-
-/**
  * End Utilities section
  */
 
@@ -280,13 +270,10 @@ JNIEXPORT jstring JNICALL Java_im_tox_jtoxcore_JTox_tox_1get_1self_1name(JNIEnv 
         return 0;
     }
 
-    char *_name = malloc(TOX_MAX_NAME_LENGTH + 1);
-    nullterminate(name, length, _name);
-    jstring __name = (*env)->NewStringUTF(env, _name);
-    free(_name);
+    jstring _name = (*env)->NewStringUTF(env, (char *) name);
     free(name);
 
-    return __name;
+    return _name;
 }
 
 JNIEXPORT jboolean JNICALL Java_im_tox_jtoxcore_JTox_tox_1set_1status_1message(JNIEnv *env, jobject obj,
