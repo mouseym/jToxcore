@@ -27,3 +27,6 @@ jni/JTox.h
 *.exe
 *.out
 *.app
+
+# Astyle orig files
+*.orig
