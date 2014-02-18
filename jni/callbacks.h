@@ -19,22 +19,22 @@
  *
  */
 typedef struct {
-	Tox *tox;
-	JavaVM *jvm;
-	jobject handler;
-	jobject jtox;
+    Tox *tox;
+    JavaVM *jvm;
+    jobject handler;
+    jobject jtox;
 } tox_jni_globals_t;
 
-static void callback_friendrequest(uint8_t *, uint8_t*, uint16_t,
-		tox_jni_globals_t*);
-static void callback_friendmessage(Tox *, int, uint8_t*, uint16_t,
-		tox_jni_globals_t*);
-static void callback_action(Tox *, int, uint8_t*, uint16_t, tox_jni_globals_t*);
-static void callback_namechange(Tox *, int, uint8_t*, uint16_t,
-		tox_jni_globals_t*);
-static void callback_statusmessage(Tox *, int, uint8_t*, uint16_t,
-		tox_jni_globals_t*);
-static void callback_userstatus(Tox *, int, TOX_USERSTATUS, tox_jni_globals_t*);
-static void callback_read_receipt(Tox *, int, uint32_t, tox_jni_globals_t*);
-static void callback_connectionstatus(Tox *, int, uint8_t, tox_jni_globals_t*);
+static void callback_friendrequest(uint8_t *, uint8_t *, uint16_t,
+                                   tox_jni_globals_t *);
+static void callback_friendmessage(Tox *, int, uint8_t *, uint16_t,
+                                   tox_jni_globals_t *);
+static void callback_action(Tox *, int, uint8_t *, uint16_t, tox_jni_globals_t *);
+static void callback_namechange(Tox *, int, uint8_t *, uint16_t,
+                                tox_jni_globals_t *);
+static void callback_statusmessage(Tox *, int, uint8_t *, uint16_t,
+                                   tox_jni_globals_t *);
+static void callback_userstatus(Tox *, int, TOX_USERSTATUS, tox_jni_globals_t *);
+static void callback_read_receipt(Tox *, int, uint32_t, tox_jni_globals_t *);
+static void callback_connectionstatus(Tox *, int, uint8_t, tox_jni_globals_t *);
 
