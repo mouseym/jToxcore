@@ -35,6 +35,12 @@
 #define ADDR_SIZE_HEX (TOX_FRIEND_ADDRESS_SIZE * 2 + 1)
 #define UNUSED(x) (void)(x)
 
+#ifdef ANDROID
+#define ATTACH_THREAD(ptr,env) (*ptr->jvm)->AttachCurrentThread(ptr->jvm, &env, 0)
+#else
+#define ATTACH_THREAD(ptr,env) (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0)
+#endif
+
 /**
  * Begin Utilities section
  */
@@ -518,7 +524,7 @@ static void callback_friendrequest(uint8_t *pubkey, uint8_t *message, uint16_t l
     jstring _pubkey;
     jbyteArray _message;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     clazz = (*env)->GetObjectClass(env, ptr->handler);
     meth = (*env)->GetMethodID(env, clazz, "onFriendRequest", "(Ljava/lang/String;[B)V");
 
@@ -538,7 +544,7 @@ static void callback_friendmessage(Tox *tox, int friendnumber, uint8_t *message,
     jmethodID meth;
     jbyteArray _message;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     class = (*env)->GetObjectClass(env, ptr->handler);
     meth = (*env)->GetMethodID(env, class, "onMessage", "(I[B)V");
 
@@ -557,7 +563,7 @@ static void callback_action(Tox *tox, int friendnumber, uint8_t *action, uint16_
     jmethodID meth;
     jbyteArray _action;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     class = (*env)->GetObjectClass(env, ptr->handler);
     meth = (*env)->GetMethodID(env, class, "onAction", "(I[B)V");
 
@@ -579,7 +585,7 @@ static void callback_namechange(Tox *tox, int friendnumber, uint8_t *newname, ui
     jmethodID jToxmeth;
     jbyteArray _newname;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     handlerClass = (*env)->GetObjectClass(env, ptr->handler);
     handlerMeth = (*env)->GetMethodID(env, handlerClass, "onNameChange", "(I[B)V");
 
@@ -605,7 +611,7 @@ static void callback_statusmessage(Tox *tox, int friendnumber, uint8_t *newstatu
     jmethodID jtoxmeth;
     jbyteArray _newstatus;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     handlerclass = (*env)->GetObjectClass(env, ptr->handler);
     handlermeth = (*env)->GetMethodID(env, handlerclass, "onStatusMessage", "(I[B)V");
     jtoxclass = (*env)->GetObjectClass(env, ptr->jtox);
@@ -635,7 +641,7 @@ static void callback_userstatus(Tox *tox, int friendnumber, TOX_USERSTATUS statu
     jfieldID fieldID;
     jobject enum_val;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     handlerclass = (*env)->GetObjectClass(env, ptr->handler);
     handlermeth = (*env)->GetMethodID(env, handlerclass, "onUserStatus",
                                       "(ILim/tox/jtoxcore/ToxUserStatus;)V");
@@ -679,7 +685,7 @@ static void callback_read_receipt(Tox *tox, int friendnumber, uint32_t receipt, 
     jclass jtoxclass;
     jmethodID jtoxmeth;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     handlerclass = (*env)->GetObjectClass(env, ptr->handler);
     handlermeth = (*env)->GetMethodID(env, handlerclass, "onReadReceipt", "(II)V");
     jtoxclass = (*env)->GetObjectClass(env, ptr->handler);
@@ -702,7 +708,7 @@ static void callback_connectionstatus(Tox *tox, int friendnumber, uint8_t newsta
 
     jboolean _newstatus;
 
-    (*ptr->jvm)->AttachCurrentThread(ptr->jvm, (void **) &env, 0);
+    ATTACH_THREAD(ptr, env);
     handlerclass = (*env)->GetObjectClass(env, ptr->handler);
     handlermeth = (*env)->GetMethodID(env, handlerclass, "onConnectionStatus", "(IZ)V");
     jtoxclass = (*env)->GetObjectClass(env, ptr->jtox);
