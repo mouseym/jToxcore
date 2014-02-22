@@ -34,11 +34,11 @@ if(${NEED_JNI_MD} MATCHES "y")
 		"${libtoxcore_INCLUDE_DIRS}"
 	)
 else()
-        include_directories(
-                "${JNI_HEADER_LOCATION}"
-                "${JAVA_INCLUDE_PATH}"
-                "${libtoxcore_INCLUDE_DIRS}"
-        )
+    include_directories(
+        "${JNI_HEADER_LOCATION}"
+        "${JAVA_INCLUDE_PATH}"
+        "${libtoxcore_INCLUDE_DIRS}"
+    )
 endif()
 add_library(
 	${LIB_TARGET_NAME}
@@ -60,4 +60,4 @@ add_dependencies(${LIB_TARGET_NAME} ${JAR_TARGET_NAME})
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set_target_properties(${LIB_TARGET_NAME} PROPERTIES PREFIX "")
 endif()
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -Wall -Wextra -pedantic")

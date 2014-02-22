@@ -682,15 +682,9 @@ static void callback_read_receipt(Tox *tox, int friendnumber, uint32_t receipt, 
     jclass handlerclass;
     jmethodID handlermeth;
 
-    jclass jtoxclass;
-    jmethodID jtoxmeth;
-
     ATTACH_THREAD(ptr, env);
     handlerclass = (*env)->GetObjectClass(env, ptr->handler);
     handlermeth = (*env)->GetMethodID(env, handlerclass, "onReadReceipt", "(II)V");
-    jtoxclass = (*env)->GetObjectClass(env, ptr->handler);
-    jtoxmeth = (*env)->GetMethodID(env, jtoxclass, "onReadReceipt", "(II)V");
-    (*env)->CallVoidMethod(env, ptr->jtox, jtoxmeth, friendnumber, receipt);
     (*env)->CallVoidMethod(env, ptr->handler, handlermeth, friendnumber, receipt);
 
     UNUSED(tox);

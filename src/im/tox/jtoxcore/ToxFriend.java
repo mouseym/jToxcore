@@ -20,197 +20,74 @@
  */
 package im.tox.jtoxcore;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * Bean for a friend in Tox. Provides all the basic information about a Friend
- * instance. Also offers an optional nickname field per friend.
- * <p>
- * Please note that the nickname field is not a field that is internal to the
- * tox API. If you want this field to be persistent and still available after
- * saving/loading, you will have to persist it to your own storage and take care
- * of loading it correctly at runtime. All other fields are automatically
- * populated when using the
- * {@link JTox#JTox(byte[], FriendList, im.tox.jtoxcore.callbacks.CallbackHandler)}
- * constructor.
+ * Interface for a Friend in Tox. This interface only supplies very basic
+ * operations needed for the core workings of Tox
  * 
+ * The setters are used by internal mechanisms of JToxcore. They should never
+ * need to be called manually
+ *
  * @author sonOfRa
- * 
  */
-public class ToxFriend {
-
-	/**
-	 * Hexadecimal client id of the friend
-	 */
-	protected String id;
-
-	/**
-	 * The friend's name
-	 */
-	protected String name;
-
-	/**
-	 * The friend's nickname.
-	 */
-	protected String nickname;
-
-	/**
-	 * The friend's status message
-	 */
-	protected transient String statusMessage;
-
-	/**
-	 * The friend's current status
-	 */
-	protected transient ToxUserStatus status;
-
-	/**
-	 * The friend's online/offline status
-	 */
-	protected transient boolean online;
-
-	/**
-	 * The friend's friend number
-	 */
-	protected final int friendnumber;
-
-	/**
-	 * Message IDs for messages sent to this friend
-	 */
-	protected transient List<Integer> sentMessages;
-
-	/**
-	 * Message IDs for messages successfully delivered to this friend
-	 */
-	protected transient List<Integer> deliveredMessages;
-
-	/**
-	 * Default constructor for ToxFriends
-	 * 
-	 * @param friendnumber
-	 *            the friendnumber of the created friend
-	 */
-	public ToxFriend(int friendnumber) {
-		this.friendnumber = friendnumber;
-		this.status = ToxUserStatus.TOX_USERSTATUS_NONE;
-		this.online = false;
-		this.sentMessages = Collections
-				.synchronizedList(new ArrayList<Integer>());
-		this.deliveredMessages = Collections
-				.synchronizedList(new ArrayList<Integer>());
-	}
+public interface ToxFriend {
 
 	/**
 	 * @return the id
 	 */
-	public String getId() {
-		return this.id;
-	}
+	String getId();
 
 	/**
 	 * @return the name
 	 */
-	public String getName() {
-		return this.name;
-	}
-
-	/**
-	 * @return the nickname
-	 */
-	public String getNickname() {
-		return this.nickname;
-	}
+	String getName();
 
 	/**
 	 * @return the statusMessage
 	 */
-	public String getStatusMessage() {
-		return this.statusMessage;
-	}
+	String getStatusMessage();
 
 	/**
 	 * @return the status
 	 */
-	public ToxUserStatus getStatus() {
-		return this.status;
-	}
+	ToxUserStatus getStatus();
 
 	/**
 	 * @return the online
 	 */
-	public boolean isOnline() {
-		return this.online;
-	}
+	boolean isOnline();
 
 	/**
 	 * @return the friendnumber
 	 */
-	public int getFriendnumber() {
-		return this.friendnumber;
-	}
-
-	/**
-	 * @return the IDs for sent messages
-	 */
-	public List<Integer> getSentMessages() {
-		return this.sentMessages;
-	}
-
-	/**
-	 * @return the IDs of sent messages for which we received a read receipt
-	 */
-	public List<Integer> getDeliveredMessages() {
-		return this.deliveredMessages;
-	}
+	int getFriendnumber();
 
 	/**
 	 * @param id
 	 *            the id to set
 	 */
-	protected void setId(String id) {
-		this.id = id;
-	}
+	void setId(String id);
 
 	/**
 	 * @param name
 	 *            the name to set
 	 */
-	protected void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * @param nickname
-	 *            the nickname to set
-	 */
-	public void setNickname(String nickname) {
-		this.nickname = nickname;
-	}
+	void setName(String name);
 
 	/**
 	 * @param statusMessage
 	 *            the statusMessage to set
 	 */
-	protected void setStatusMessage(String statusMessage) {
-		this.statusMessage = statusMessage;
-	}
+	void setStatusMessage(String statusMessage);
 
 	/**
 	 * @param status
 	 *            the status to set
 	 */
-	protected void setStatus(ToxUserStatus status) {
-		this.status = status;
-	}
+	void setStatus(ToxUserStatus status);
 
 	/**
 	 * @param online
-	 *            the online to set
+	 *            set whether Friend is online
 	 */
-	protected void setOnline(boolean online) {
-		this.online = online;
-	}
-
+	void setOnline(boolean online);
 }
