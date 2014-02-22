@@ -25,61 +25,55 @@ package im.tox.jtoxcore;
  * {@link JTox#doTox()} at the given frequency. If no frequency is given, or the
  * given frequency is < 20, it will be set to 20, which is the minimum frequency
  * as suggested by the core developers.
- * 
+ * <p/>
  * When the instance is killed, a call to {@link JTox#doTox()} will result in an
  * exception. This exception will be caught, and the run method will terminate,
  * thus terminating the Thread this Worker is running in.
- * 
+ *
  * @author sonOfRa
- * @param <F>
- *            friend type that is used with the JTox instance held by this class
- * 
  */
-public class ToxWorker<F extends ToxFriend> implements Runnable {
+public class ToxWorker implements Runnable {
 
-	private JTox<F> instance;
-	private int sleeptime;
+    private JTox<?> instance;
+    private int sleeptime;
 
-	/**
-	 * Creates a new Tox worker runnable with the default frequency of 20Hz
-	 * 
-	 * @param instance
-	 *            the JTox instance to work on
-	 */
-	public ToxWorker(JTox<F> instance) {
-		this.instance = instance;
-		this.sleeptime = 1000 / 20;
-	}
+    /**
+     * Creates a new Tox worker runnable with the default frequency of 20Hz
+     *
+     * @param instance the JTox instance to work on
+     */
+    public ToxWorker(JTox<?> instance) {
+        this.instance = instance;
+        this.sleeptime = 1000 / 20;
+    }
 
-	/**
-	 * Creates a new Tox worker runnable with the given frequency. The minimum
-	 * frequency is 20, if the frequency is smaller than 20, it will be set to
-	 * 20.
-	 * 
-	 * @param instance
-	 *            the JTox instance to work on
-	 * @param frequency
-	 *            the frequency (in Hz)
-	 */
-	public ToxWorker(JTox<F> instance, int frequency) {
-		this.instance = instance;
-		this.sleeptime = 1000 / frequency >= 20 ? frequency : 20;
-	}
+    /**
+     * Creates a new Tox worker runnable with the given frequency. The minimum
+     * frequency is 20, if the frequency is smaller than 20, it will be set to
+     * 20.
+     *
+     * @param instance  the JTox instance to work on
+     * @param frequency the frequency (in Hz)
+     */
+    public ToxWorker(JTox<?> instance, int frequency) {
+        this.instance = instance;
+        this.sleeptime = 1000 / frequency >= 20 ? frequency : 20;
+    }
 
-	@Override
-	public void run() {
-		while (true) {
-			try {
-				this.instance.doTox();
-			} catch (ToxException e) {
-				return;
-			}
-			try {
-				Thread.sleep(this.sleeptime);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		}
-	}
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                this.instance.doTox();
+            } catch (ToxException e) {
+                return;
+            }
+            try {
+                Thread.sleep(this.sleeptime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
 }

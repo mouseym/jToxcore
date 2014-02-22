@@ -462,7 +462,8 @@ public class JTox<F extends ToxFriend> {
 	 *            the number of the friend
 	 * @return false on success, true on failure
 	 */
-	private native boolean tox_del_friend(long messengerPointer, int friendnumber);
+	private native boolean tox_del_friend(long messengerPointer,
+			int friendnumber);
 
 	/**
 	 * Method used to delete a friend
@@ -499,8 +500,8 @@ public class JTox<F extends ToxFriend> {
 	 *            length of the message in bytes
 	 * @return the message ID on success, 0 on failure
 	 */
-	private native int tox_send_message(long messengerPointer, int friendnumber,
-			byte[] message, int length);
+	private native int tox_send_message(long messengerPointer,
+			int friendnumber, byte[] message, int length);
 
 	/**
 	 * Sends a message to the specified friend. Add the message ID of the sent
@@ -531,9 +532,7 @@ public class JTox<F extends ToxFriend> {
 		if (result == 0) {
 			throw new ToxException(ToxError.TOX_SEND_FAILED);
 		}
-		friend.getSentMessages().add(result);
 		return result;
-
 	}
 
 	/**
@@ -552,8 +551,8 @@ public class JTox<F extends ToxFriend> {
 	 *            the message ID to use
 	 * @return the message ID on success, 0 on failure
 	 */
-	private native int tox_send_message_withid(long messengerPointer, int friendnumber,
-			byte[] message, int length, int messageID);
+	private native int tox_send_message_withid(long messengerPointer,
+			int friendnumber, byte[] message, int length, int messageID);
 
 	/**
 	 * Sends a message to the specified friend, with a specified ID
@@ -588,7 +587,6 @@ public class JTox<F extends ToxFriend> {
 		if (result == 0) {
 			throw new ToxException(ToxError.TOX_SEND_FAILED);
 		}
-		friend.getSentMessages().add(result);
 		return result;
 	}
 
@@ -624,8 +622,8 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_send_action(this.messengerPointer, friend.getFriendnumber(),
-					actionArray, actionArray.length)) {
+			if (tox_send_action(this.messengerPointer,
+					friend.getFriendnumber(), actionArray, actionArray.length)) {
 				throw new ToxException(ToxError.TOX_SEND_FAILED);
 			}
 		} finally {
@@ -713,8 +711,8 @@ public class JTox<F extends ToxFriend> {
 	 * @param pubkey
 	 *            public key of the bootstrap node
 	 */
-	private native int tox_bootstrap_from_address(long messengerPointer, String ip,
-			int port, byte[] pubkey);
+	private native int tox_bootstrap_from_address(long messengerPointer,
+			String ip, int port, byte[] pubkey);
 
 	/**
 	 * Method used to bootstrap the client's connection.
@@ -744,7 +742,8 @@ public class JTox<F extends ToxFriend> {
 		try {
 			checkPointer();
 
-			if (tox_bootstrap_from_address(this.messengerPointer, host, port, pubkeyArray) == 0) {
+			if (tox_bootstrap_from_address(this.messengerPointer, host, port,
+					pubkeyArray) == 0) {
 				throw new UnknownHostException(host);
 			}
 
@@ -876,12 +875,13 @@ public class JTox<F extends ToxFriend> {
 
 	/**
 	 * Refresh the friend list, looking for new friends, status changes, name
-	 * changes etc.
+	 * changes etc. (This function is probably not needed, and will possibly
+	 * become private in later versions)
 	 * 
 	 * @throws ToxException
 	 *             if the instance was killed, or an internal error occured
 	 */
-	public void refreshList() throws ToxException {
+	private void refreshList() throws ToxException {
 		for (int i : getInternalFriendList()) {
 			this.friendList.addFriendIfNotExists(i);
 			getClientId(i);
@@ -966,7 +966,7 @@ public class JTox<F extends ToxFriend> {
 		}
 		this.friendList.getByFriendNumber(friendnumber).setId(result);
 	}
-	
+
 	/**
 	 * Native call to tox_get_friend_connection_status
 	 * 
@@ -974,11 +974,12 @@ public class JTox<F extends ToxFriend> {
 	 *            the friend's number
 	 * @return connecting status of a friend
 	 */
-	private native int tox_get_friend_connection_status(long messengerPointer, int friendnumber);
+	private native int tox_get_friend_connection_status(long messengerPointer,
+			int friendnumber);
 
 	/**
-	 * Get the connection status for a given Friend, and update that friends connection status
-	 * to that value.
+	 * Get the connection status for a given Friend, and update that friends
+	 * connection status to that value.
 	 * 
 	 * @param friendnumber
 	 *            the friendnumber
@@ -986,12 +987,14 @@ public class JTox<F extends ToxFriend> {
 	 *             if the instance has been killed, or an error occurred when
 	 *             attempting to fetch the connection status
 	 */
-	private void getFriendConnectionStatus(int friendnumber) throws ToxException {
+	private void getFriendConnectionStatus(int friendnumber)
+			throws ToxException {
 		this.lock.lock();
 		int result;
 		try {
 			checkPointer();
-			result = tox_get_friend_connection_status(this.messengerPointer, friendnumber);
+			result = tox_get_friend_connection_status(this.messengerPointer,
+					friendnumber);
 		} finally {
 			this.lock.unlock();
 		}
@@ -1001,12 +1004,11 @@ public class JTox<F extends ToxFriend> {
 		}
 		if (result == 0) {
 			this.friendList.getByFriendNumber(friendnumber).setOnline(false);
-		}
-		else {
+		} else {
 			this.friendList.getByFriendNumber(friendnumber).setOnline(true);
 		}
 	}
-	
+
 	/**
 	 * Checks if there exists a friend with given friendnumber.
 	 * 
@@ -1016,8 +1018,9 @@ public class JTox<F extends ToxFriend> {
 	 *             if the instance has been killed, or an error occurred when
 	 *             attempting to fetch the connection status
 	 */
-	private native boolean tox_get_friend_exists(long messengerPointer, int friendnumber);
-	
+	private native boolean tox_get_friend_exists(long messengerPointer,
+			int friendnumber);
+
 	/**
 	 * Checks if there exists a friend with given friendnumber.
 	 * 
@@ -1035,7 +1038,7 @@ public class JTox<F extends ToxFriend> {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Native call to tox_get_name
 	 * 
@@ -1171,20 +1174,6 @@ public class JTox<F extends ToxFriend> {
 	}
 
 	/**
-	 * Add the read receipt to delivered messages if a receipt callback is
-	 * invoked
-	 * 
-	 * @param friendnumber
-	 *            the friendnumber
-	 * @param receipt
-	 *            the receipt
-	 */
-	private void onReadReceipt(int friendnumber, int receipt) {
-		this.friendList.getByFriendNumber(friendnumber).getDeliveredMessages()
-				.add(receipt);
-	}
-
-	/**
 	 * Update the status message if a status message callback is invoked
 	 * 
 	 * @param friendnumber
@@ -1293,9 +1282,10 @@ public class JTox<F extends ToxFriend> {
 	 */
 	public static byte[] hexToByteArray(String in) {
 		int length = in.length();
-		byte[] out = new byte[length/2];
+		byte[] out = new byte[length / 2];
 		for (int i = 0; i < length; i += 2) {
-			out[i / 2] =  (byte)((Character.digit(in.charAt(i), 16) << 4) + Character.digit(in.charAt(i + 1), 16));
+			out[i / 2] = (byte) ((Character.digit(in.charAt(i), 16) << 4) + Character
+					.digit(in.charAt(i + 1), 16));
 		}
 		return out;
 	}

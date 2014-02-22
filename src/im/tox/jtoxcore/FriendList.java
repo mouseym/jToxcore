@@ -66,20 +66,8 @@ public interface FriendList<F extends ToxFriend> {
 	List<F> getByName(String name, boolean ignorecase);
 
 	/**
-	 * Retrieve all friends with the specified nickname
-	 * 
-	 * @param nickname
-	 * @param ignorecase
-	 *            when <code>true</code>, this call must ignore the case of
-	 *            results
-	 * @return a List containing all friends with the specified nickname. If no
-	 *         results are found, an empty List is returned.
-	 */
-	List<F> getByNickname(String nickname, boolean ignorecase);
-
-	/**
 	 * Retrieve all Friends that have the content of partial inside of their
-	 * names or nicknames. This method should ignore the case when comparing.
+	 * names. This method should ignore the case when comparing.
 	 * 
 	 * @param partial
 	 *            the partial String to look for
